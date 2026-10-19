@@ -28,6 +28,17 @@
 
 可以通过 `dataDirectory` 改变根目录。每个渠道的 `DATABASE_PATH` 必须位于自己的子目录，`BRIDGE_LOCK_DIRECTORY` 指向根目录下的 `locks`。
 
+## Windows 私有文件检查
+
+已有 Python 3 时，在运行检查或前台启动的 PowerShell 中选择它：
+
+```powershell
+$env:DOT_BRIDGE_PYTHON = (Get-Command python.exe).Source
+& $env:DOT_BRIDGE_PYTHON --version
+```
+
+确认显示真实的 Python 3 版本；Microsoft Store 的安装占位程序不能代替解释器。也可以直接填写已有 `python.exe` 的绝对路径。子进程会沿用这个明确选择，私有文件 ACL 检查仍然生效。
+
 ## 官方 Tunnel 与原 dot
 
 沿用[官方 Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)提供的客户端和当前版本支持的配置方式。只运行一个对应的 Tunnel 客户端实例，将 MCP HTTP target 指向聚合入口，例如 `http://127.0.0.1:8789/mcp`。

@@ -31,6 +31,8 @@ flowchart LR
 
 需要 **Node.js >=24.15 且 <25**。Windows 可前台运行；Linux 可使用 systemd 常驻运行。
 
+Windows 还需要已有的 Python 3，用于核验私有文件的 ACL。按[Windows 配置说明](docs/operations.md#windows-私有文件检查)设置解释器路径。
+
 ```bash
 git clone https://github.com/Arcueid77/dot-bridge.git
 cd dot-bridge

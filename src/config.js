@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {parseEnv} from 'node:util';
 import {readPrivateFile} from '@dot-bridge/core/platform/private-files.js';
+import {existingWindowsPython} from '@dot-bridge/core/platform';
 import {readServiceKey} from '@dot-bridge/core/router/auth.js';
 import {readConfig as readRouterConfig} from '@dot-bridge/core/router/config.js';
 import {components, channelIds} from './components.js';
@@ -50,6 +51,10 @@ export function readManifest(file) {
   } finally { if(fd!==undefined)fs.closeSync(fd); }
 }
 export function readEnvironment(file) {
+  if(process.platform==='win32') {
+    try {existingWindowsPython();}
+    catch {refuse('python_required','Windows 私有文件检查需要已有的 Python 3；请把 DOT_BRIDGE_PYTHON 设置为 python.exe 的绝对路径。');}
+  }
   let bytes;
   try {
     bytes=readPrivateFile(file,{maxBytes:65536});
@@ -114,7 +119,7 @@ export async function prepare(manifest) {
   return {manifest,backends,router};
 }
 export function processEnvironment(extra={}) {
-  const allowed=['PATH','Path','SystemRoot','WINDIR','TEMP','TMP','HOME','USERPROFILE','APPDATA','LOCALAPPDATA','LANG','LC_ALL','PYTHONUTF8','HTTP_PROXY','HTTPS_PROXY','ALL_PROXY','NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy'];
+  const allowed=['PATH','Path','SystemRoot','WINDIR','TEMP','TMP','HOME','USERPROFILE','APPDATA','LOCALAPPDATA','LANG','LC_ALL','PYTHONUTF8','DOT_BRIDGE_PYTHON','HTTP_PROXY','HTTPS_PROXY','ALL_PROXY','NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy'];
   return {...Object.fromEntries(allowed.filter(k=>process.env[k]!==undefined).map(k=>[k,process.env[k]])),...extra};
 }
 export function applyEnvironment(env,supervised=false) {

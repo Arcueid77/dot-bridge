@@ -13,6 +13,17 @@ The manifest can live outside the checkout, for example `/var/lib/dot-bridge/bri
 
 Under `dataDirectory`, each channel owns its `lark/` or `qq/` database directory and both use `locks/`. Private configuration belongs in a separate `private/` directory. Run `doctor` and foreground operation as the same user that will own the service.
 
+## Windows private files
+
+Select an existing Python 3 interpreter in the PowerShell session used for checks and foreground operation:
+
+```powershell
+$env:DOT_BRIDGE_PYTHON = (Get-Command python.exe).Source
+& $env:DOT_BRIDGE_PYTHON --version
+```
+
+The command must print a real Python 3 version, not invoke a Microsoft Store installation placeholder. An explicit absolute `python.exe` path is also accepted. Child processes preserve this choice and keep the ACL checks enabled.
+
 ## Tunnel and subscriptions
 
 Use the [official Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) client and its supported configuration format. Keep one client instance for the existing Tunnel. Point its HTTP MCP target to the aggregate, for example `http://127.0.0.1:8789/mcp`, and reference the aggregate service-key file for `X-Dot-Bridge-Service-Key`.

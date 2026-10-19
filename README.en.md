@@ -19,6 +19,8 @@ Voice is available through transcription. Native audio input depends on the dot 
 
 Use **Node.js >=24.15 and <25**. Foreground operation supports Windows and Linux; persistent services use Linux/systemd.
 
+Windows also needs an existing Python 3 interpreter for private-file ACL checks. Set `DOT_BRIDGE_PYTHON` to its absolute path as described in [operations](docs/operations.en.md#windows-private-files).
+
 ```bash
 git clone https://github.com/Arcueid77/dot-bridge.git
 cd dot-bridge
