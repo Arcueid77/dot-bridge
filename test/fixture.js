@@ -3,12 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
 import {privateMkdtempSync,fixtureChmodSync,cleanupPrivateFixture,privateMkdirSync} from '@dot-bridge/core/platform/test-fixtures.js';
+import {windowsWritePrivateFile} from '@dot-bridge/core/platform';
 import {readManifest} from '../src/config.js';
 export async function fixture(t,selected=['lark','qq']) {
  const directory=privateMkdtempSync(path.join(os.tmpdir(),'dot-distribution-'));fixtureChmodSync(directory,0o700);cleanupPrivateFixture(t,directory);
  const servers=await Promise.all(Array.from({length:3},()=>new Promise((resolve,reject)=>{const s=net.createServer();s.once('error',reject);s.listen(0,'127.0.0.1',()=>resolve(s));})));
  const ports=servers.map(s=>s.address().port);await Promise.all(servers.map(s=>new Promise(r=>s.close(r))));
- const write=(name,text)=>{const file=path.join(directory,name);fs.writeFileSync(file,text,{mode:0o600});fixtureChmodSync(file,0o600);return file;};
+ const write=(name,text)=>{const file=path.join(directory,name);if(process.platform==='win32')windowsWritePrivateFile(file,Buffer.from(text));else fs.writeFileSync(file,text,{mode:0o600});return file;};
  const keys=['lark','qq','router'].map((id,index)=>write(`${id}.key`,Buffer.alloc(32,index+51).toString('base64url')));
  const env={};
  for(const [index,id] of ['lark','qq'].entries())env[id]=write(`${id}.env`,[
