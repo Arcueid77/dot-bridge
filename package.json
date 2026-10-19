@@ -1,0 +1,39 @@
+{
+  "name": "dot-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unified installation and operation of independent QQ and Feishu bridges to the same ChatGPT dot",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15 <25"
+  },
+  "bin": {
+    "dotbridge": "bin/dotbridge.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "vendor/",
+    "examples/",
+    "docs/",
+    "components.lock.json",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "bridge": "node bin/dotbridge.js",
+    "vendor": "node scripts/vendor-components.js",
+    "check": "node scripts/check.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "@dot-bridge/core": "file:vendor/dot-bridge-core-0.3.0.tgz",
+    "dot-lark-bridge": "file:vendor/dot-lark-bridge-0.2.0.tgz",
+    "dot-qq-bridge": "file:vendor/dot-qq-bridge-0.2.0.tgz"
+  },
+  "overrides": {
+    "@dot-bridge/core": "$@dot-bridge/core"
+  }
+}

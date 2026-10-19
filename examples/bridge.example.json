@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "mode": "live",
+  "channels": {
+    "lark": "/var/lib/dot-bridge/private/lark.env",
+    "qq": "/var/lib/dot-bridge/private/qq-live.env"
+  },
+  "routerEnv": "/var/lib/dot-bridge/private/router.env",
+  "dataDirectory": "/var/lib/dot-bridge",
+  "systemd": {
+    "prefix": "dot-bridge",
+    "user": "dot-bridge"
+  }
+}

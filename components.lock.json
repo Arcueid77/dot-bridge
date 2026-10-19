@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "components": {
+    "core": {
+      "package": "@dot-bridge/core",
+      "version": "0.3.0",
+      "repository": "https://github.com/Arcueid77/dot-bridge-core",
+      "revision": "a2e9dc71d0849d80c8eedbf8c18c705ff340afbf",
+      "artifact": "vendor/dot-bridge-core-0.3.0.tgz",
+      "sha256": "c2ac631ff36d63b173cb8ebe7e0afded1f81e18b30d5de4b20c9ca910ca2d2d1"
+    },
+    "lark": {
+      "package": "dot-lark-bridge",
+      "version": "0.2.0",
+      "repository": "https://github.com/Arcueid77/dot-lark-bridge",
+      "revision": "686347bb83263edb9e1149c7fe1a4b323f2d5e4f",
+      "artifact": "vendor/dot-lark-bridge-0.2.0.tgz",
+      "sha256": "d06508298bc0cc949ce28cf3b524a567946e4160f7a554a8440911e5adb3956c"
+    },
+    "qq": {
+      "package": "dot-qq-bridge",
+      "version": "0.2.0",
+      "repository": "https://github.com/Arcueid77/dot-qq-bridge",
+      "revision": "b6c24d2021a4dcf6eec1e154b61ce61252fef2cf",
+      "artifact": "vendor/dot-qq-bridge-0.2.0.tgz",
+      "sha256": "95585ef9bcee2acf62f01093259b63bade1d388ac38442b00acda949cfdd95a0"
+    }
+  }
+}

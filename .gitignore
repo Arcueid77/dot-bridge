@@ -1,0 +1,14 @@
+node_modules/
+coverage/
+dist/
+.env
+.env.*
+!.env.example
+bridge.json
+systemd-output/
+data/
+private/
+*.sqlite*
+*.log
+*.tgz
+!vendor/*.tgz
