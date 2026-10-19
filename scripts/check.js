@@ -7,7 +7,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const lock=JSON.parse(fs.readFileSync(path.join(root,'package-lock.json'),'utf8'));
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'components.lock.json'),'utf8'));
-if(manifest.schemaVersion!==1||Object.keys(manifest.components).sort().join(',')!=='core,lark,qq')throw Error('Unexpected component manifest.');
+if(manifest.schemaVersion!==1||Object.keys(manifest.components).sort().join(',')!=='core,dingtalk,discord,lark,line,qq,telegram,wecom,weixin')throw Error('Unexpected component manifest.');
 for(const [id,item] of Object.entries(manifest.components)){
  if(!/^[a-f0-9]{40}$/.test(item.revision)||!/^vendor\/dot-[a-z-]+-[0-9.]+\.tgz$/.test(item.artifact))throw Error('Invalid artifact reference.');
  const bytes=fs.readFileSync(path.join(root,item.artifact));

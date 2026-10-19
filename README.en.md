@@ -1,8 +1,8 @@
 # DotBridge
 
-Connect Feishu/Lark and QQ to your existing ChatGPT dot. Send a message from your familiar chat app and let the same dot handle it and reply.
+Connect your chat apps to your existing ChatGPT dot. Send a message from your familiar chat app and let the same dot handle it and reply.
 
-This repository is the unified installation and operations entry point. Enable Lark, QQ, or both. Each channel remains maintained in its own repository.
+This repository is the unified installation and operations entry point. Select Lark, QQ, DingTalk, WeCom, Weixin iLink, Discord, Telegram or LINE as needed. Each channel remains maintained in its own repository.
 
 [简体中文](README.md) · [Operations](docs/operations.en.md) · [IM candidates](docs/im-roadmap.md)
 
@@ -12,6 +12,12 @@ This repository is the unified installation and operations entry point. Enable L
 | --- | --- |
 | Feishu / Lark | Private text, images, files and transcribed voice; additional interactions follow the Lark component's policy |
 | Official QQ bot | Owner private text and transcribed voice |
+| DingTalk / WeCom | Initial owner-private text support using persistent platform connections |
+| Weixin iLink | Initial owner-private text support with existing iLink credentials |
+| Discord / Telegram | Initial owner-private text support using a platform bot |
+| LINE | Initial owner-private text support; requires HTTPS webhook ingress and has a short reply window |
+
+The six new channels expose attachment metadata only. See [channel setup and limits](docs/new-channels.md) for platform prerequisites; binary media and group conversations are not included in this initial version.
 
 Voice is available through transcription. Native audio input depends on the dot host. Local Whisper transcription requires an additional protected Linux runtime; QQ reference transcription can be used directly when available.
 

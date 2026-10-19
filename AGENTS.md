@@ -1,7 +1,7 @@
 # Repository scope
 
 This is the distribution and operations repository. Provider behavior belongs in
-the independent dot-lark-bridge and dot-qq-bridge repositories; common protocol,
+the independent dot-<channel>-bridge repositories; common protocol,
 transport and private-file code belongs in dot-bridge-core. Consume reviewed
 immutable packages instead of forking their implementation here.
 

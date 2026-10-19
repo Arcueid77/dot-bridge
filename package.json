@@ -1,6 +1,6 @@
 {
   "name": "dot-bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Unified installation and operation of independent QQ and Feishu bridges to the same ChatGPT dot",
   "license": "MIT",
@@ -29,9 +29,15 @@
     "test": "node --test --test-concurrency=1 test/*.test.js"
   },
   "dependencies": {
-    "@dot-bridge/core": "file:vendor/dot-bridge-core-0.3.0.tgz",
-    "dot-lark-bridge": "file:vendor/dot-lark-bridge-0.2.0.tgz",
-    "dot-qq-bridge": "file:vendor/dot-qq-bridge-0.2.0.tgz"
+    "@dot-bridge/core": "file:vendor/dot-bridge-core-0.4.0.tgz",
+    "dot-lark-bridge": "file:vendor/dot-lark-bridge-0.2.2.tgz",
+    "dot-qq-bridge": "file:vendor/dot-qq-bridge-0.2.2.tgz",
+    "dot-dingtalk-bridge": "file:vendor/dot-dingtalk-bridge-0.1.1.tgz",
+    "dot-wecom-bridge": "file:vendor/dot-wecom-bridge-0.1.1.tgz",
+    "dot-weixin-bridge": "file:vendor/dot-weixin-bridge-0.1.1.tgz",
+    "dot-discord-bridge": "file:vendor/dot-discord-bridge-0.1.1.tgz",
+    "dot-telegram-bridge": "file:vendor/dot-telegram-bridge-0.1.1.tgz",
+    "dot-line-bridge": "file:vendor/dot-line-bridge-0.1.1.tgz"
   },
   "overrides": {
     "@dot-bridge/core": "$@dot-bridge/core"

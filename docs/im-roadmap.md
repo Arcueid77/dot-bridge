@@ -1,14 +1,14 @@
 # 还能接入哪些聊天应用
 
-当前发行版可用的是 **飞书 / Lark、QQ 官方机器人**。下面是其他渠道的接入候选，尚未实现，不会出现在启动列表中。
+当前发行版包含 **飞书 / Lark、QQ 官方机器人**，以及钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE 的首版文字渠道。新渠道的账号条件和操作步骤见[接入说明](new-channels.md)。
 
 本次参考 [cc-connect 的平台实现](https://github.com/chenhg5/cc-connect/tree/2dec7173bdd44ec598c3c7e5c7ff00407acfdedf/platform)，核对日期为 2026-10-19。cc-connect 连接的是本地编程 Agent；这里借鉴其 IM 侧接法，dot 侧继续使用现有官方 Tunnel 和事件订阅。
 
 ## 本轮接入顺序
 
-按当前需求，依次推进钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE。每个渠道使用独立仓库，随实现一起创建；完成后再加入总发行版。
+钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE 使用独立仓库维护，由总入口统一安装和运行。首版范围为本人私聊文字收发，媒体内容读取和群聊按后续需求逐步增加。
 
-| 渠道 | 计划仓库 | cc-connect 采用的接法 | 接入时需要处理 |
+| 渠道 | 独立仓库 | cc-connect 采用的接法 | 平台条件与限制 |
 | --- | --- | --- | --- |
 | [钉钉](https://github.com/chenhg5/cc-connect/blob/2dec7173bdd44ec598c3c7e5c7ff00407acfdedf/docs/dingtalk.md) | `dot-dingtalk-bridge` | Stream / WebSocket | 企业应用权限、消息类型转换和回复凭据的有效期；部署方式与现有飞书长连接接近 |
 | [企业微信](https://github.com/chenhg5/cc-connect/blob/2dec7173bdd44ec598c3c7e5c7ff00407acfdedf/docs/wecom.md) | `dot-wecom-bridge` | 智能机器人 WebSocket；也有应用回调方案 | 优先采用长连接，需要账号具备创建对应智能机器人的资格；普通群机器人 webhook 不具备完整的双向收发能力 |

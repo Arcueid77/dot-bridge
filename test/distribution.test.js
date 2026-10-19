@@ -35,7 +35,7 @@ test('single-channel mode never reads QQ configuration or starts a QQ listener',
 });
 test('unknown channels, reused keys, port collisions and dotenv loader injection fail before startup',async t=>{
  const f=await fixture(t);
- for(const change of [{channels:{telegram:f.env.qq}},{mode:'auto'},{secret:'synthetic-secret'},{systemd:{prefix:'ssh',user:'root'}}]){
+ for(const change of [{channels:{unknown_im:f.env.qq}},{mode:'auto'},{secret:'synthetic-secret'},{systemd:{prefix:'ssh',user:'root'}}]){
   const file=f.write('invalid-'+Math.random()+'.json',JSON.stringify({...f.config,...change}));assert.throws(()=>readManifest(file));
  }
  fs.writeFileSync(f.keys[1],fs.readFileSync(f.keys[0]));await assert.rejects(prepare(f.manifest()),e=>e.code==='service_keys_reused');

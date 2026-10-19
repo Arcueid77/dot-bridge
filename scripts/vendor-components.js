@@ -17,7 +17,7 @@ const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'dot-bridge-package-'));
 try{
  const manifest={schemaVersion:1,components:{}};
  fs.mkdirSync(path.join(root,'vendor'),{recursive:true});
- for(const [id,name] of [['core','dot-bridge-core'],['lark','dot-lark-bridge'],['qq','dot-qq-bridge']]){
+ for(const [id,name] of [['core','dot-bridge-core'],['lark','dot-lark-bridge'],['qq','dot-qq-bridge'],...['dingtalk','wecom','weixin','discord','telegram','line'].map(id=>[id,`dot-${id}-bridge`])]){
   const source=path.join(sources,name);
   if(run('git',['status','--porcelain'],source))throw Error(`${name} must be a clean committed source checkout.`);
   const revision=run('git',['rev-parse','HEAD'],source);
@@ -34,7 +34,7 @@ try{
    if(bundled.source_revision!==core.revision||bundled.version!==core.version||bundled.sha256!==core.sha256)throw Error(`${name} must consume the same reviewed core release.`);
   }
   const [packed]=JSON.parse(run(process.execPath,[npm,'pack','--ignore-scripts','--json'],destination));
-  if(!/^dot-(bridge-core|lark-bridge|qq-bridge)-[0-9.]+\.tgz$/.test(packed.filename))throw Error('Unexpected artifact name.');
+  if(!/^dot-(bridge-core|(?:lark|qq|dingtalk|wecom|weixin|discord|telegram|line)-bridge)-[0-9.]+\.tgz$/.test(packed.filename))throw Error('Unexpected artifact name.');
   const bytes=fs.readFileSync(path.join(destination,packed.filename));
   fs.writeFileSync(path.join(root,'vendor',packed.filename),bytes);
   manifest.components[id]={package:metadata.name,version:metadata.version,repository:`https://github.com/Arcueid77/${name}`,revision,artifact:`vendor/${packed.filename}`,sha256:hash(bytes)};

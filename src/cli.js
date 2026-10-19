@@ -9,13 +9,13 @@ import {inspectMcp} from './rpc.js';
 import {writeUnits,serviceAction} from './systemd.js';
 import {OperatorError,refuse} from './errors.js';
 
-const help=`DotBridge — 将飞书和 QQ 接回同一个 dot\n\n使用方式：dotbridge <命令> [选项]\n  channels                         查看当前提供的 IM\n  init --config <文件>              创建不含凭据的配置清单\n    --channels lark,qq              选择启用的渠道\n    --env-dir <绝对目录>            已有私有环境文件所在目录\n    --data-dir <绝对目录>           持久数据目录\n    --mode readiness|live          默认 readiness\n  doctor --config <文件>            离线检查组件和私有配置\n  status --config <文件>            检查本地 MCP 目录与认证\n  run --config <文件>               前台运行选中的组件\n    --confirm-live                 正式收发时必须明确提供\n  service render --config <文件> --output <新目录>\n  service start|stop|restart|status --config <文件>\n\nrun 通过 Ctrl+C 优雅停止。Linux 常驻运行使用生成的 systemd 服务。\n`;
+const help=`DotBridge — 将聊天软件接回同一个 dot\n\n使用方式：dotbridge <命令> [选项]\n  channels                         查看当前提供的 IM\n  init --config <文件>              创建不含凭据的配置清单\n    --channels lark,qq              选择启用的渠道\n    --env-dir <绝对目录>            已有私有环境文件所在目录\n    --data-dir <绝对目录>           持久数据目录\n    --mode readiness|live          默认 readiness\n  doctor --config <文件>            离线检查组件和私有配置\n  status --config <文件>            检查本地 MCP 目录与认证\n  run --config <文件>               前台运行选中的组件\n    --confirm-live                 正式收发时必须明确提供\n  service render --config <文件> --output <新目录>\n  service start|stop|restart|status --config <文件>\n\nrun 通过 Ctrl+C 优雅停止。Linux 常驻运行使用生成的 systemd 服务。\n`;
 const write=value=>process.stdout.write(JSON.stringify(value,null,2)+'\n');
 const options=args=>parseArgs({args,strict:true,options:{config:{type:'string'},channels:{type:'string'},'env-dir':{type:'string'},'data-dir':{type:'string'},mode:{type:'string'},output:{type:'string'},'confirm-live':{type:'boolean'}}}).values;
 function init(value) {
   const file=path.resolve(value.config??'bridge.json');
   const selected=(value.channels??'lark,qq').split(',');
-  if(!selected.length||selected.some(id=>!channelIds.includes(id))||new Set(selected).size!==selected.length)refuse('channels_invalid','仅可选择 lark、qq，且不能重复。');
+  if(!selected.length||selected.some(id=>!channelIds.includes(id))||new Set(selected).size!==selected.length)refuse('channels_invalid','请选择 channels 命令列出的渠道，且不能重复。');
   const dataDirectory=path.resolve(value['data-dir']??(process.platform==='linux'?'/var/lib/dot-bridge':path.join(os.homedir(),'.dot-bridge')));
   const envDirectory=path.resolve(value['env-dir']??path.join(dataDirectory,'private'));
   const mode=value.mode??'readiness';if(!['readiness','live'].includes(mode))refuse('mode_invalid','mode 必须是 readiness 或 live。');

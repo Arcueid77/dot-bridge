@@ -79,7 +79,7 @@ export async function backendConfiguration(manifest,id,env=readEnvironment(manif
     const module=await components[id].config();
     const config=id==='lark'&&manifest.mode==='readiness'?module.readTunnelReadinessConfig(env):module.readConfig(env);
     if(manifest.mode==='readiness') {
-      if(['DATABASE_PATH','STORAGE_KEY','STORAGE_KEY_FILE',id==='lark'?'LARK_CREDENTIALS_FILE':'QQ_CREDENTIALS_FILE'].some(k=>env[k]))throw Error();
+      if(['DATABASE_PATH','STORAGE_KEY','STORAGE_KEY_FILE',`${components[id].adapter.envPrefix}_CREDENTIALS_FILE`].some(k=>env[k]))throw Error();
     } else {
       const state=path.join(manifest.dataDirectory,id), relative=path.relative(state,config.dbPath);
       if(!relative||relative.startsWith('..'+path.sep)||relative==='..'||path.isAbsolute(relative)||env.BRIDGE_LOCK_DIRECTORY!==path.join(manifest.dataDirectory,'locks'))throw Error();
@@ -109,6 +109,8 @@ export async function prepare(manifest) {
   assertNode();const backends={};
   for(const id of manifest.selected)backends[id]=await backendConfiguration(manifest,id);
   const router=routerConfiguration(manifest,backends), all=[...Object.values(backends),router];
+  const ports=all.flatMap(item=>[item.port,...(item.config.webhookPort?[item.config.webhookPort]:[])]);
+  if(new Set(ports).size!==ports.length)refuse('port_mismatch','MCP 和回调监听端口必须互不重复。');
   for(const id of manifest.selected)if(router.config.channels[id].port!==backends[id].port)refuse('port_mismatch','聚合路由与 IM 端口不一致。');
   const keys=[];
   for(const item of all) {

@@ -1,8 +1,8 @@
 # DotBridge
 
-把飞书和 QQ 接到你已有的 ChatGPT dot，用熟悉的聊天软件发消息，让同一个 dot 处理并回复。
+把常用聊天软件接到你已有的 ChatGPT dot，用熟悉的聊天入口发消息，让同一个 dot 处理并回复。
 
-这是 DotBridge 的统一安装与运行入口。你可以只启用飞书、只启用 QQ，或同时启用两者；各渠道继续由独立项目维护。
+这是 DotBridge 的统一安装与运行入口。按需启用飞书、QQ、钉钉、企业微信、微信 iLink、Discord、Telegram 或 LINE；各渠道由独立项目维护。
 
 [English](README.en.md) · [安装与常驻运行](docs/operations.md) · [后续 IM 候选](docs/im-roadmap.md)
 
@@ -12,6 +12,12 @@
 | --- | --- |
 | 飞书 / Lark | 私聊文字、图片、文件和语音转写；其他交互按飞书组件的配置启用 |
 | QQ 官方机器人 | 本人私聊文字和语音转写 |
+| 钉钉、企业微信 | 首版支持本人私聊文字；使用平台长连接 |
+| 微信 iLink | 首版支持本人私聊文字；需要已有 iLink 登录凭据 |
+| Discord、Telegram | 首版支持本人私聊文字；使用各自的 Bot |
+| LINE | 首版支持本人私聊文字；需要 HTTPS webhook，回复窗口较短 |
+
+新增六个渠道的附件目前只提供类型信息，暂不读取图片、文件或音频内容。平台条件、回复限制和首次配置见[新渠道接入说明](docs/new-channels.md)。
 
 语音通过可用转写交给原 dot。语音本身能否直接进入模型，取决于 dot 的工具环境。本地 Whisper 转写需要另外安装 Linux 运行环境；QQ 自带参考转写时可直接使用。
 
@@ -19,8 +25,10 @@
 flowchart LR
     L[飞书] <--> LB[飞书组件]
     Q[QQ] <--> QB[QQ 组件]
+    IM[钉钉 / 企业微信 / 微信 iLink<br/>Discord / Telegram / LINE] <--> IB[各渠道独立组件]
     LB <--> R[统一 MCP 路由]
     QB <--> R
+    IB <--> R
     R <--> T[官方 Secure MCP Tunnel]
     T <--> D[原来的 dot]
 ```
@@ -40,7 +48,7 @@ npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 npm run bridge -- channels
 ```
 
-本仓库已经包含所需组件的固定构建包，安装时不需要另行克隆飞书、QQ 或 core 仓库。当前使用源码安装，尚未发布 npm registry 包。
+本仓库已经包含所需组件的固定构建包，安装时不需要另行克隆各渠道或 core 仓库。当前使用源码安装，尚未发布 npm registry 包。
 
 ## 接入已有配置
 
@@ -85,8 +93,14 @@ sudo node bin/dotbridge.js service status --config ./bridge.json
 | 本仓库 | 安装入口、渠道组合、运行管理、整套版本 |
 | [dot-lark-bridge](https://github.com/Arcueid77/dot-lark-bridge) | 飞书接入与收发 |
 | [dot-qq-bridge](https://github.com/Arcueid77/dot-qq-bridge) | QQ 接入与收发 |
+| [dot-dingtalk-bridge](https://github.com/Arcueid77/dot-dingtalk-bridge) | 钉钉接入与收发 |
+| [dot-wecom-bridge](https://github.com/Arcueid77/dot-wecom-bridge) | 企业微信智能机器人接入与收发 |
+| [dot-weixin-bridge](https://github.com/Arcueid77/dot-weixin-bridge) | 微信 iLink接入与收发 |
+| [dot-discord-bridge](https://github.com/Arcueid77/dot-discord-bridge) | Discord接入与收发 |
+| [dot-telegram-bridge](https://github.com/Arcueid77/dot-telegram-bridge) | Telegram接入与收发 |
+| [dot-line-bridge](https://github.com/Arcueid77/dot-line-bridge) | LINE接入与收发 |
 | [dot-bridge-core](https://github.com/Arcueid77/dot-bridge-core) | 公共传输、MCP 路由、私有文件保护和语音处理 |
 
-新增 IM 会使用新的独立仓库，再接入总发行版。候选列表与接入顺序见 [IM 扩展计划](docs/im-roadmap.md)；当前可启动的渠道以 `channels` 命令为准。
+当前可启动的渠道以 `channels` 命令为准；[IM 扩展计划](docs/im-roadmap.md)记录后续方向。Slack 使用已有官方支持，不安排独立桥接组件。
 
 开发与版本维护见[开发说明](docs/development.md)。

@@ -7,14 +7,14 @@ repositories; transport and security primitives remain in core.
 
 ## Component interface
 
-Each IM package exposes `adapter`, `config`, `server`, `runtime/live`,
+Each IM package exposes `adapter`, `config`, `runtime/live`,
 `runtime/readiness`, and `package.json`. The distribution statically registers
 installed adapters; neither remote input nor environment values select module
 paths or executable programs. `components.lock.json` records canonical source
 repositories, revisions and artifact digests.
 
 The private registry packages are not yet published. Reviewed tarballs are
-included in `vendor/`. The npm override pins one shared core release across both
+included in `vendor/`. The npm override pins one shared core release across all
 components. A clean checkout requires only this repository and `npm ci`.
 
 ## Rebuild artifacts
@@ -65,6 +65,8 @@ provider delivery and production cutover are separate operator activities.
 - The official Tunnel remains independently configured; the distribution never
   fabricates an owner identity, callback URL or runtime credential.
 
-Candidate IMs are documented in `im-roadmap.md`. cc-connect is a research
+The six new providers use core 0.4.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router.
+
+Platform priorities are documented in `im-roadmap.md`. cc-connect is a research
 reference for platform transports; its model/agent runtime and platform code are
 not vendored by this repository.

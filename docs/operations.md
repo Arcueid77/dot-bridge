@@ -8,6 +8,7 @@
 
 - [飞书配置与配对](https://github.com/Arcueid77/dot-lark-bridge/blob/686347bb83263edb9e1149c7fe1a4b323f2d5e4f/docs/configuration.md)
 - [QQ 配置与绑定](https://github.com/Arcueid77/dot-qq-bridge/blob/b6c24d2021a4dcf6eec1e154b61ce61252fef2cf/docs/configuration.md)
+- [钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE](new-channels.md)
 
 总入口读取已有配置，不代替平台授权，也不创建新的 dot。示例文件在 [examples](../examples)：它们只包含路径与占位符，需要换成自己的已核验配置。
 

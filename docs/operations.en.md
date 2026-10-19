@@ -6,12 +6,13 @@ Use Node.js >=24.15 and <25. Pair each channel using its existing component flow
 
 - [Lark configuration](https://github.com/Arcueid77/dot-lark-bridge/blob/686347bb83263edb9e1149c7fe1a4b323f2d5e4f/docs/configuration.en.md)
 - [QQ configuration](https://github.com/Arcueid77/dot-qq-bridge/blob/b6c24d2021a4dcf6eec1e154b61ce61252fef2cf/docs/configuration.en.md)
+- [DingTalk, WeCom, Weixin iLink, Discord, Telegram and LINE setup](new-channels.md)
 
 The distribution reads protected configuration and preserves the original dot. It does not perform pairing or create credentials. Examples contain paths and placeholders only. Use separate service keys for the aggregate and each enabled backend. Store private files outside the repository under the final runtime user: 0700 directories and 0600 files on Linux, private ACLs on Windows.
 
 The manifest can live outside the checkout, for example `/var/lib/dot-bridge/bridge.json`. `init` never overwrites an existing manifest. The manifest selects channels; the aggregate derives upstream ports and key references from their environment files.
 
-Under `dataDirectory`, each channel owns its `lark/` or `qq/` database directory and both use `locks/`. Private configuration belongs in a separate `private/` directory. Run `doctor` and foreground operation as the same user that will own the service.
+Under `dataDirectory`, each channel owns its own database directory, named after its channel ID, and all use `locks/`. Private configuration belongs in a separate `private/` directory. Run `doctor` and foreground operation as the same user that will own the service.
 
 ## Windows private files
 

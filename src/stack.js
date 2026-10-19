@@ -16,7 +16,7 @@ async function assertFree(endpoint) {
 }
 export async function startStack(plan,{confirmLive=false,onEvent=()=>{},startupMs=30000,graceMs=180000,signal}={}) {
   if((plan.manifest.mode==='live')!==confirmLive)refuse('live_confirmation','正式收发需要明确提供 --confirm-live。');
-  for(const endpoint of [...Object.values(plan.backends),plan.router])await assertFree(endpoint);
+  for(const endpoint of [...Object.values(plan.backends),plan.router]){await assertFree(endpoint);if(endpoint.config.webhookPort)await assertFree({host:endpoint.host,port:endpoint.config.webhookPort});}
   const children=[];let stopping=false,closePromise,failure=null,finish;
   const closed=new Promise(resolve=>{finish=resolve;});
   const close=()=>{
