@@ -6,8 +6,8 @@
 
 各渠道的配对流程继续使用自己的官方应用与组件引导：
 
-- [飞书配置与配对](https://github.com/Arcueid77/dot-lark-bridge/blob/686347bb83263edb9e1149c7fe1a4b323f2d5e4f/docs/configuration.md)
-- [QQ 配置与绑定](https://github.com/Arcueid77/dot-qq-bridge/blob/b6c24d2021a4dcf6eec1e154b61ce61252fef2cf/docs/configuration.md)
+- [飞书配置与配对](https://github.com/Arcueid77/dot-lark-bridge)
+- [QQ 配置与绑定](https://github.com/Arcueid77/dot-qq-bridge)
 - [钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE](new-channels.md)
 
 总入口读取已有配置，不代替平台授权，也不创建新的 dot。示例文件在 [examples](../examples)：它们只包含路径与占位符，需要换成自己的已核验配置。
@@ -93,6 +93,19 @@ node bin/dotbridge.js service status --config /var/lib/dot-bridge/bridge.json
 journalctl -u dot-bridge-lark.service -u dot-bridge-qq.service -u dot-bridge-router.service
 ```
 
+`status` 把每个渠道的本地连接、本人绑定、平台网关和事件订阅分开显示。未知字段显示为空，
+不会用“工具能发现”代替“订阅已成功”。某个渠道离线时，其他渠道的结果仍然可见。
+
+新渠道还会显示最近五次订阅请求的时间、阶段、RPC code、固定错误分类和回调域名，
+不包含完整回调地址、密钥或消息。空记录只能说明当前版本没有记录，无法还原此前失败。
+
+遇到“网关在线但没有回复”时，先看订阅是否有效：
+
+- `policy` / `callback_policy_required`：核对真实回调域名和 `CALLBACK_HOSTS`；先确认权限再改。飞书和 QQ 的旧配置名仍为 `MCP_CALLBACK_ALLOWED_HOSTS`。
+- `transport`：主机的出网条件尚未满足，先检查实际代理和 HTTPS 连接设置。
+- `challenge`：请求到了桥，但回调验证没有完成；把脱敏错误交给原 dot 排查，不连续创建订阅。
+- 没有记录：不能据此猜测失败位置。请原 dot 保留一次真实创建操作的结果，再对应查看。
+
 前台总入口输出组件启停和认证目录状态，不转发第三方 SDK 的原始诊断文字。systemd 日志使用各组件已有的日志行为。新生成的单元使用主机默认 journald 保留策略；如需限定天数和容量，由管理员为服务配置独立 namespace 和保留策略。它不会继承某台旧服务器的日志设置。
 
 媒体、群聊和语音能力分别受平台接口、渠道配置与 dot 能力限制。QQ 的官方机器人与个人号 OneBot/NapCat 属于不同接法；本发行版提供的是前者。
@@ -108,3 +121,7 @@ sudo node bin/dotbridge.js service start --config /var/lib/dot-bridge/bridge.jso
 ```
 
 凭据和数据继续放在仓库外。回滚代码时使用上一套代码与依赖，并先检查数据结构兼容性；不要用旧数据库覆盖升级后新收到的消息。已发送及 `uncertain` 的任务保持原状态，不自动重发。更换安装路径后需要重新生成并核对 systemd 中的绝对路径。
+
+退回尚不支持媒体回复的旧版本前，先确认没有等待发送、正在处理或结果不明的媒体任务。
+有这类任务时保留当前版本或停机等待处理，不删除队列、改状态或把媒体计划改成文字重发。
+各渠道的回滚检查见对应组件说明。

@@ -3,13 +3,15 @@ import path from 'node:path';
 import os from 'node:os';
 import {parseArgs} from 'node:util';
 import {channelIds,components} from './components.js';
-import {assertNode,readManifest,prepare} from './config.js';
+import {assertNode,readManifest,prepare,prepareStatus} from './config.js';
 import {startStack} from './stack.js';
 import {inspectMcp} from './rpc.js';
+import {inspectChannels} from './status.js';
+import {onboardingText} from './onboarding.js';
 import {writeUnits,serviceAction} from './systemd.js';
 import {OperatorError,refuse} from './errors.js';
 
-const help=`DotBridge — 将聊天软件接回同一个 dot\n\n使用方式：dotbridge <命令> [选项]\n  channels                         查看当前提供的 IM\n  init --config <文件>              创建不含凭据的配置清单\n    --channels lark,qq              选择启用的渠道\n    --env-dir <绝对目录>            已有私有环境文件所在目录\n    --data-dir <绝对目录>           持久数据目录\n    --mode readiness|live          默认 readiness\n  doctor --config <文件>            离线检查组件和私有配置\n  status --config <文件>            检查本地 MCP 目录与认证\n  run --config <文件>               前台运行选中的组件\n    --confirm-live                 正式收发时必须明确提供\n  service render --config <文件> --output <新目录>\n  service start|stop|restart|status --config <文件>\n\nrun 通过 Ctrl+C 优雅停止。Linux 常驻运行使用生成的 systemd 服务。\n`;
+const help=`DotBridge — 将聊天软件接回同一个 dot\n\n使用方式：dotbridge <命令> [选项]\n  channels                         查看当前提供的 IM\n  guide --channels telegram        查看平台接入步骤（省略渠道则显示全部）\n  init --config <文件>              创建不含凭据的配置清单\n    --channels lark,qq              选择启用的渠道\n    --env-dir <绝对目录>            已有私有环境文件所在目录\n    --data-dir <绝对目录>           持久数据目录\n    --mode readiness|live          默认 readiness\n  doctor --config <文件>            离线检查组件和私有配置\n  status --config <文件>            查看本地连接、网关和订阅状态\n  run --config <文件>               前台运行选中的组件\n    --confirm-live                 正式收发时必须明确提供\n  service render --config <文件> --output <新目录>\n  service start|stop|restart|status --config <文件>\n\nrun 通过 Ctrl+C 优雅停止。Linux 常驻运行使用生成的 systemd 服务。\n`;
 const write=value=>process.stdout.write(JSON.stringify(value,null,2)+'\n');
 const options=args=>parseArgs({args,strict:true,options:{config:{type:'string'},channels:{type:'string'},'env-dir':{type:'string'},'data-dir':{type:'string'},mode:{type:'string'},output:{type:'string'},'confirm-live':{type:'boolean'}}}).values;
 function init(value) {
@@ -36,6 +38,12 @@ export async function main(args=process.argv.slice(2)) {
     }
     const action=command==='service'?args[1]:null;
     const value=options(args.slice(command==='service'?2:1));
+    if(command==='guide'){
+      if(Object.keys(value).some(key=>key!=='channels'))refuse('arguments_invalid','guide 仅接受 --channels。');
+      const selected=value.channels===undefined?channelIds:value.channels.split(',');
+      if(!selected.length||selected.some(id=>!channelIds.includes(id))||new Set(selected).size!==selected.length)refuse('channels_invalid','请选择 channels 命令列出的渠道。');
+      process.stdout.write(onboardingText(selected));return;
+    }
     const allowed=command==='init'?['config','channels','env-dir','data-dir','mode']:
       command==='run'?['config','confirm-live']:
       command==='service'&&action==='render'?['config','output']:
@@ -56,12 +64,15 @@ export async function main(args=process.argv.slice(2)) {
     }
     if(!['doctor','status','run'].includes(command))refuse('command_unknown','未知命令，请运行 dotbridge help。');
     if(command==='run'&&(manifest.mode==='live')!==Boolean(value['confirm-live']))refuse('live_confirmation','正式收发需要 --confirm-live；readiness 不接受该标志。');
-    const plan=await prepare(manifest);
+    const plan=command==='status'?await prepareStatus(manifest):await prepare(manifest);
     if(command==='doctor'){write({configurationReady:true,mode:manifest.mode,channels:manifest.selected,providerNetworkChecked:false});return;}
     if(command==='status'){
-      const tools=await inspectMcp(plan.router),events=await inspectMcp(plan.router,'events/list');
+      const [tools,events,channelStatus]=await Promise.all([
+        plan.router?inspectMcp(plan.router).catch(()=>({})):Promise.resolve({}),plan.router?inspectMcp(plan.router,'events/list').catch(()=>({})):Promise.resolve({}),
+        manifest.mode==='live'?inspectChannels(plan):Promise.resolve([])
+      ]);
       const reachable=tools.status===200&&events.status===200&&Array.isArray(tools.body?.result?.tools)&&Array.isArray(events.body?.result?.events);
-      write({authenticatedMcpReachable:reachable,mode:manifest.mode,channels:manifest.selected,toolCount:reachable?tools.body.result.tools.length:0,eventCount:reachable?events.body.result.events.length:0,providerDeliveryChecked:false});if(!reachable)process.exitCode=1;return;
+      write({authenticatedMcpReachable:reachable,mode:manifest.mode,channels:manifest.selected,channelStatus,...(plan.errors.router?{routerConfigurationError:plan.errors.router}:{}),toolCount:reachable?tools.body.result.tools.length:0,eventCount:reachable?events.body.result.events.length:0,providerDeliveryChecked:false});if(!reachable||channelStatus.some(item=>!item.authenticatedMcpReachable))process.exitCode=1;return;
     }
     let stack,stopRequested=false;const controller=new AbortController();
     const stop=()=>{stopRequested=true;controller.abort();void stack?.close();};

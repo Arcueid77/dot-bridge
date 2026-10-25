@@ -8,18 +8,22 @@
 
 ## 当前可用
 
-| 渠道 | 使用方式 |
-| --- | --- |
-| 飞书 / Lark | 私聊文字、图片、文件和语音转写；其他交互按飞书组件的配置启用 |
-| QQ 官方机器人 | 本人私聊文字和语音转写 |
-| 钉钉、企业微信 | 首版支持本人私聊文字；使用平台长连接 |
-| 微信 iLink | 首版支持本人私聊文字；需要已有 iLink 登录凭据 |
-| Discord、Telegram | 首版支持本人私聊文字；使用各自的 Bot |
-| LINE | 首版支持本人私聊文字；需要 HTTPS webhook，回复窗口较短 |
+所有渠道都处理本人私聊，回复回到原会话。图片、音频和文件通过附件工具读取；能否直接理解音频，还取决于 dot 的工具环境。
 
-新增六个渠道的附件目前只提供类型信息，暂不读取图片、文件或音频内容。平台条件、回复限制和首次配置见[新渠道接入说明](docs/new-channels.md)。
+| 渠道 | 收到的内容 | 可以回复 |
+| --- | --- | --- |
+| 飞书 / Lark | 文字、图片、音频、文件 | 文字、图片、音频、文件 |
+| QQ 官方机器人 | 文字、图片、音频、文件 | 文字、图片、原生语音、文件 |
+| 钉钉 | 文字、图片、音频、文件 | 文字、图片、AMR 语音、文件 |
+| 企业微信智能机器人 | 文字、图片、文件；语音使用平台提供的转写 | 文字、图片、AMR 语音、文件 |
+| 微信 iLink | 文字、图片、音频、文件 | 文字、图片、文件；音频可作为文件发送 |
+| Discord | 文字、图片、音频、文件 | 文字、图片、可播放音频附件、文件 |
+| Telegram | 文字、图片、音频、文件 | 文字、图片、语音、文件 |
+| LINE | 文字、图片、音频、文件 | 文字；附件发送需要额外的公网媒体托管，暂未提供 |
 
-语音通过可用转写交给原 dot。语音本身能否直接进入模型，取决于 dot 的工具环境。本地 Whisper 转写需要另外安装 Linux 运行环境；QQ 自带参考转写时可直接使用。
+各平台的格式和大小限制见[渠道接入说明](docs/new-channels.md)。语音转写可作为参考；本地 Whisper 需要另外安装受保护的 Linux 运行环境。桥不会把一份转写标成“听到了原始语音”。
+
+飞书媒体需要在原交互配置中启用，并由应用管理员开通对应权限；详见飞书组件的配置说明。
 
 ```mermaid
 flowchart LR
@@ -46,6 +50,7 @@ git clone https://github.com/Arcueid77/dot-bridge.git
 cd dot-bridge
 npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 npm run bridge -- channels
+npm run bridge -- guide --channels telegram
 ```
 
 本仓库已经包含所需组件的固定构建包，安装时不需要另行克隆各渠道或 core 仓库。当前使用源码安装，尚未发布 npm registry 包。
@@ -71,7 +76,7 @@ npm run bridge -- run --config ./bridge.json --confirm-live
 ## 常用操作
 
 ```bash
-# 查看本地 MCP 连接
+# 查看绑定、网关连接和订阅状态
 npm run bridge -- status --config ./bridge.json
 
 # 生成待安装的 Linux 服务文件
@@ -84,7 +89,7 @@ sudo node bin/dotbridge.js service restart --config ./bridge.json --confirm-live
 sudo node bin/dotbridge.js service status --config ./bridge.json
 ```
 
-`doctor` 检查安装与私有配置，`status` 检查本地 MCP 目录。实际收发还需要官方 Tunnel 连通、原 dot 的有效订阅和对应 IM 的连接。
+`guide` 列出各平台的接入步骤，`doctor` 检查安装与私有配置，`status` 分别显示网关和订阅状态。订阅失败时，新渠道会记录最近一次失败的阶段，方便判断下一步该处理什么。实际收发还需要官方 Tunnel 连通和原 dot 的有效订阅。
 
 ## 项目组成
 

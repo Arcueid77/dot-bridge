@@ -1,14 +1,34 @@
 # 接入更多聊天软件
 
 钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE 都有独立渠道组件，
-可由总入口按需启动。首版接收本人私聊，回复回到原会话；支持文字，附件只显示类型信息。
-图片、文件和音频的内容读取尚未接入这些新渠道。平台已经附带的语音文字可以作为参考。
+可由总入口按需启动。接收本人私聊，回复回到原会话；除文字外，dot 可以读取图片、音频和文件附件。
+企业微信收到语音时使用平台转写，没有可下载的原音频。LINE 当前只回复文字。
+
+先查看所需渠道的接入步骤，无需准备任何凭据就能运行：
+
+```bash
+npm run bridge -- guide --channels dingtalk,wecom,telegram
+```
+
+钉钉、企业微信和 Telegram 提供一次性指令配对：启动组件里的配对命令后，
+由本人向机器人发送屏幕上的指令。成功后生成本人绑定文件，不需要从日志里抄身份 ID。
+完整命令和所需平台设置见各组件的配置说明。
+
+微信 iLink 提供终端扫码登录。以最终运行用户在总仓库目录执行：
+
+```bash
+node node_modules/dot-weixin-bridge/scripts/login.js --credentials-file /var/lib/dot-bridge/private/weixin/credentials.json --confirm-private-storage --confirm-stopped
+```
+
+先准备该用户专用的私有目录，确认旧消费者已停止。二维码只在当前终端显示，
+由本人扫码并确认，成功后生成凭据和本人绑定；已有文件不会被覆盖。
+此时还需要启动服务，并由原 dot 建立消息订阅。
 
 | 渠道名 | 平台设置与使用说明 | 默认 MCP 端口 | 回复限制 |
 | --- | --- | --- | --- |
 | `dingtalk` | [钉钉](https://github.com/Arcueid77/dot-dingtalk-bridge) | 8790 | 当前每次最多 600 字符 |
 | `wecom` | [企业微信智能机器人](https://github.com/Arcueid77/dot-wecom-bridge) | 8791 | 当前每次最多 6826 字符 |
-| `weixin` | [微信 iLink](https://github.com/Arcueid77/dot-weixin-bridge) | 8792 | 当前每次最多 3800 字符；需要已有 iLink 登录凭据 |
+| `weixin` | [微信 iLink](https://github.com/Arcueid77/dot-weixin-bridge) | 8792 | 当前每次最多 3800 字符；支持本人扫码登录 |
 | `discord` | [Discord Bot](https://github.com/Arcueid77/dot-discord-bridge) | 8793 | 每次最多 2000 字符 |
 | `telegram` | [Telegram Bot](https://github.com/Arcueid77/dot-telegram-bridge) | 8794 | 每次最多 4096 字符；已有 webhook 需要先协调停用 |
 | `line` | [LINE Messaging API](https://github.com/Arcueid77/dot-line-bridge) | 8795 | 需在约 55 秒内完成回复；每次最多 20000 字符 |
@@ -16,6 +36,27 @@
 以上是组件的当前上限。超过上限会拒绝发送，不自动拆分成多次最终回复。
 LINE 还需要公网 HTTPS webhook，由已有反向代理转发到 `127.0.0.1:8895/webhook`；
 详细配置见 LINE 仓库。这个入口与给 Tunnel 使用的 MCP 端口分开。
+
+## 图片、语音和文件怎么用
+
+让原 dot 刷新现有插件工具目录。它收到附件消息后，先用 `get_<渠道>_message` 查看附件列表，
+再用 `get_<渠道>_attachment` 读取对应内容；支持媒体回复的渠道提供 `reply_<渠道>_media`。
+飞书继续使用自身的附件与回复工具。文件来自原消息，回复也只回到原私聊。
+
+新增六个渠道读取的单个附件最多 8 MiB。发送还有各平台的格式与大小限制：
+
+| 渠道 | 媒体回复 |
+| --- | --- |
+| 钉钉 | 图片、文件，或不超过 60 秒的 AMR 语音；不附带额外文字 |
+| 企业微信 | 图片、文件、AMR 语音；不附带额外文字 |
+| 微信 iLink | 图片或文件；音频请作为文件发送，不显示为原生语音气泡 |
+| Discord | 图片、文件或可播放的音频附件，可带文字 |
+| Telegram | 图片、文件或语音，可带不超过 1024 字符的说明 |
+| LINE | 当前使用文字回复；平台发送图片和音频要求公网 URL，桥未附带媒体托管 |
+
+一条消息选择一种最终回复：文字或媒体。发送状态显示 `pending` 时还在队列中，
+显示 `uncertain` 时结果不明，不要再次发送。语音转写用于帮助理解内容；
+是否能直接听取原始音频由 dot 的运行环境决定。
 
 ## 准备平台配置
 

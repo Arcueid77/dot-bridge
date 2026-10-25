@@ -10,6 +10,9 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const {values}=parseArgs({options:{sources:{type:'string'},'npm-cli':{type:'string'}}});
 const sources=path.resolve(values.sources??path.join(root,'..'));
 const npm=values['npm-cli']??process.env.npm_execpath;
+// Git for Windows may put GNU tar first on PATH; it treats C: as a remote
+// archive host. The Windows-provided bsdtar accepts native absolute paths.
+const tar=process.platform==='win32'?path.join(process.env.SystemRoot??'C:\\Windows','System32','tar.exe'):'tar';
 if(!npm||!path.isAbsolute(npm)||!fs.existsSync(npm))throw Error('Run through npm run vendor or supply --npm-cli.');
 const run=(command,args,cwd)=>{const r=spawnSync(command,args,{cwd,encoding:'utf8',windowsHide:true,timeout:120000,maxBuffer:1024*1024});if(r.status!==0)throw Error(`Component packaging failed at ${path.basename(command)}.`);return r.stdout.trim();};
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -25,7 +28,7 @@ try{
   const destination=path.join(scratch,name);fs.mkdirSync(destination);
   const archive=path.join(scratch,`${name}.tar`);
   run('git',['archive','--format=tar','--output',archive,revision],source);
-  run('tar',['-xf',archive,'-C',destination],scratch);
+  run(tar,['-xf',archive,'-C',destination],scratch);
   const metadata=JSON.parse(fs.readFileSync(path.join(destination,'package.json'),'utf8'));
   if(metadata.name!==(id==='core'?'@dot-bridge/core':name))throw Error('Component package name differs.');
   if(id!=='core'){

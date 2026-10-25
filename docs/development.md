@@ -65,7 +65,7 @@ provider delivery and production cutover are separate operator activities.
 - The official Tunnel remains independently configured; the distribution never
   fabricates an owner identity, callback URL or runtime credential.
 
-The six new providers use core 0.4.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router.
+The six new providers use core 0.5.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router. Media regression includes authorization revocation during upload/read, retained encrypted capacity, bounded UTF-8 rich results and no replay after uncertain sends. Pairing uses expiring nonce fixtures and real private-file permission tests. Optional SILK runs in bounded workers using codec dependencies pinned by the individual providers.
 
 Platform priorities are documented in `im-roadmap.md`. cc-connect is a research
 reference for platform transports; its model/agent runtime and platform code are

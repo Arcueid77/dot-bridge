@@ -75,6 +75,7 @@ function baseMode(env, mode) {
 export async function backendConfiguration(manifest,id,env=readEnvironment(manifest.channels[id])) {
   if(!manifest.selected.includes(id))bad();
   baseMode(env,manifest.mode);
+  if(!['lark','qq'].includes(id)&&!env.CALLBACK_HOSTS&&env.MCP_CALLBACK_ALLOWED_HOSTS)refuse('callback_config_name',`${id} 使用 CALLBACK_HOSTS；请将精确域名配置到此字段。`);
   try {
     const module=await components[id].config();
     const config=id==='lark'&&manifest.mode==='readiness'?module.readTunnelReadinessConfig(env):module.readConfig(env);
@@ -119,6 +120,23 @@ export async function prepare(manifest) {
   }
   if(new Set(keys).size!==keys.length)refuse('service_keys_reused','聚合入口与每个 IM 必须使用独立的 service key。');
   return {manifest,backends,router};
+}
+// Inspection must still report working channels when another private file is
+// unavailable. Startup keeps the stricter all-or-nothing prepare() above.
+export async function prepareStatus(manifest) {
+  assertNode();const backends={},errors={};
+  for(const id of manifest.selected){
+    try{const backend=await backendConfiguration(manifest,id);backend.key=readServiceKey(backend.keyFile,true);backends[id]=backend;}
+    catch(error){errors[id]=['callback_config_name','environment_unsafe','python_required','backend_configuration','mode_mismatch','listener_invalid'].includes(error?.code)?error.code:'configuration_unavailable';}
+  }
+  let router;
+  if(Object.keys(backends).length===manifest.selected.length){
+    try{router=routerConfiguration(manifest,backends);router.key=readServiceKey(router.keyFile,true);}
+    catch{errors.router='configuration_unavailable';}
+  }else errors.router='channel_configuration_unavailable';
+  const entries=[...Object.entries(backends),...(router?[['router',router]]:[])];
+  for(const [id,item] of entries)if(entries.some(([other,value])=>other!==id&&(value.key===item.key||value.port===item.port))){errors[id]='configuration_conflict';if(id==='router')router=undefined;else delete backends[id];}
+  return {manifest,backends,router,errors};
 }
 export function processEnvironment(extra={}) {
   const allowed=['PATH','Path','SystemRoot','WINDIR','TEMP','TMP','HOME','USERPROFILE','APPDATA','LOCALAPPDATA','LANG','LC_ALL','PYTHONUTF8','DOT_BRIDGE_PYTHON','HTTP_PROXY','HTTPS_PROXY','ALL_PROXY','NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy'];

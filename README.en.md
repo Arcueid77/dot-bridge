@@ -8,18 +8,22 @@ This repository is the unified installation and operations entry point. Select L
 
 ## Available channels
 
-| Channel | Usage |
-| --- | --- |
-| Feishu / Lark | Private text, images, files and transcribed voice; additional interactions follow the Lark component's policy |
-| Official QQ bot | Owner private text and transcribed voice |
-| DingTalk / WeCom | Initial owner-private text support using persistent platform connections |
-| Weixin iLink | Initial owner-private text support with existing iLink credentials |
-| Discord / Telegram | Initial owner-private text support using a platform bot |
-| LINE | Initial owner-private text support; requires HTTPS webhook ingress and has a short reply window |
+All channels are bound to the owner's private conversation. Replies return to that conversation.
 
-The six new channels expose attachment metadata only. See [channel setup and limits](docs/new-channels.md) for platform prerequisites; binary media and group conversations are not included in this initial version.
+| Channel | Receive | Reply |
+| --- | --- | --- |
+| Feishu / Lark | Text, images, audio, files | Text, images, audio, files |
+| Official QQ bot | Text, images, audio, files | Text, images, native voice, files |
+| DingTalk | Text, images, audio, files | Text, images, AMR voice, files |
+| WeCom smart bot | Text, images, files; platform transcript for voice | Text, images, AMR voice, files |
+| Weixin iLink | Text, images, audio, files | Text, images, files; audio can be sent as a file |
+| Discord | Text, images, audio, files | Text, images, playable audio attachments, files |
+| Telegram | Text, images, audio, files | Text, images, voice, files |
+| LINE | Text, images, audio, files | Text; sending attachments needs public media hosting, which is not included |
 
-Voice is available through transcription. Native audio input depends on the dot host. Local Whisper transcription requires an additional protected Linux runtime; QQ reference transcription can be used directly when available.
+See [channel setup and limits](docs/new-channels.md) for formats and size limits. Audio understanding depends on the dot host. A transcript is a reference, not proof of native audio understanding. Optional local Whisper requires a protected Linux runtime.
+
+Lark media requires the corresponding interaction policy and app permissions; follow the component's configuration guide.
 
 ## Install
 
@@ -32,6 +36,7 @@ git clone https://github.com/Arcueid77/dot-bridge.git
 cd dot-bridge
 npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 npm run bridge -- channels
+npm run bridge -- guide --channels telegram
 ```
 
 Pinned component artifacts are included, so no sibling source checkouts are needed. This is a source installation, not a published npm registry package.
@@ -59,7 +64,7 @@ sudo node bin/dotbridge.js service restart --config ./bridge.json --confirm-live
 sudo node bin/dotbridge.js service status --config ./bridge.json
 ```
 
-`doctor` checks installed components and protected configuration. `status` checks authenticated local MCP catalogs. Real delivery also requires the official Tunnel, a valid original-dot subscription and the channel connection.
+`guide` shows platform setup steps. `doctor` checks installed components and protected configuration. `status` reports authenticated catalogs, gateway and subscription states separately, plus recent redacted subscription failures where available. Real delivery also requires the official Tunnel and a valid original-dot subscription.
 
 ## Independent components
 

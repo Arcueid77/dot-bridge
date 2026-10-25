@@ -4,8 +4,8 @@
 
 Use Node.js >=24.15 and <25. Pair each channel using its existing component flow:
 
-- [Lark configuration](https://github.com/Arcueid77/dot-lark-bridge/blob/686347bb83263edb9e1149c7fe1a4b323f2d5e4f/docs/configuration.en.md)
-- [QQ configuration](https://github.com/Arcueid77/dot-qq-bridge/blob/b6c24d2021a4dcf6eec1e154b61ce61252fef2cf/docs/configuration.en.md)
+- [Lark configuration](https://github.com/Arcueid77/dot-lark-bridge)
+- [QQ configuration](https://github.com/Arcueid77/dot-qq-bridge)
 - [DingTalk, WeCom, Weixin iLink, Discord, Telegram and LINE setup](new-channels.md)
 
 The distribution reads protected configuration and preserves the original dot. It does not perform pairing or create credentials. Examples contain paths and placeholders only. Use separate service keys for the aggregate and each enabled backend. Store private files outside the repository under the final runtime user: 0700 directories and 0600 files on Linux, private ACLs on Windows.
@@ -60,8 +60,14 @@ This controls selected backends and the aggregate. The official Tunnel keeps its
 
 ## Status, logs and upgrades
 
-`status` checks authenticated local catalogs. `service status` reports selected systemd units. Foreground output contains lifecycle state rather than raw SDK diagnostics. Generated systemd units use the host's default journal retention; a dedicated namespace and retention policy are an administrator choice and are not copied from an old VPS.
+`guide --channels telegram` shows setup steps without reading credentials. `status` checks authenticated catalogs and reports each channel's binding, gateway and subscription separately. Unknown fields remain null. An unreachable backend does not hide other channel results. `service status` reports selected systemd units.
+
+The six generic channels retain the last five subscription attempts as encrypted, redacted diagnostics: time, phase, RPC code, fixed reason and hostname. No callback path, secret or message text is returned. Empty history cannot reconstruct older failures. A policy error requires checking the actual callback host; a transport error concerns the host's network policy; a challenge error means verification did not finish. Do not repeatedly create subscriptions. These channels use `CALLBACK_HOSTS`; existing Lark/QQ configuration uses `MCP_CALLBACK_ALLOWED_HOSTS`.
+
+Foreground output contains lifecycle state rather than raw SDK diagnostics. Generated systemd units use the host's default journal retention; a dedicated namespace and retention policy are an administrator choice and are not copied from an old VPS.
 
 Stop before changing dependencies, preserve the previous code and `node_modules`, switch to a reviewed distribution revision, run `npm ci --omit=dev --ignore-scripts --no-audit --no-fund`, run `doctor` as the runtime user, then start services. Credentials and data stay outside the checkout. Roll back code/dependencies only after checking database compatibility; never overwrite new messages with an old database snapshot. Regenerate units if absolute installation paths change.
+
+Before downgrading to a version without media replies, check for pending, processing or uncertain media jobs. Preserve the current version or stop for review while those jobs exist; do not delete the queue, rewrite outcomes or resend an encoded media plan as text.
 
 Media and group capabilities follow channel policy and dot capabilities. Official QQ bots and personal-account OneBot/NapCat integrations are distinct; this distribution uses the official bot route.
