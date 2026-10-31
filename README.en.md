@@ -66,6 +66,16 @@ sudo node bin/dotbridge.js service status --config ./bridge.json
 
 `guide` shows platform setup steps. `doctor` checks installed components and protected configuration. `status` reports authenticated catalogs, gateway and subscription states separately, plus recent redacted subscription failures where available. Real delivery also requires the official Tunnel and a valid original-dot subscription.
 
+## Local management
+
+Open a local dashboard for channel status, owner pairing guidance, original-dot subscriptions, configuration checks, and upgrade preparation:
+
+```bash
+node bin/dotbridge.js ui --config /var/lib/dot-bridge/bridge.json
+```
+
+Open the loopback URL printed by the command. Use `ui --demo` for a synthetic, account-free preview. The dashboard does not accept credentials, start another consumer, create subscriptions, or execute a target release. Configuration saves retain a private backup and take effect after an administrator reviews and restarts services. See the [management guide](docs/management.md).
+
 ## Independent components
 
 - [dot-lark-bridge](https://github.com/Arcueid77/dot-lark-bridge): Feishu/Lark.

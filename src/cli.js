@@ -10,10 +10,12 @@ import {inspectChannels} from './status.js';
 import {onboardingText} from './onboarding.js';
 import {writeUnits,serviceAction} from './systemd.js';
 import {OperatorError,refuse} from './errors.js';
+import {startManagement} from './management.js';
 
 const help=`DotBridge — 将聊天软件接回同一个 dot\n\n使用方式：dotbridge <命令> [选项]\n  channels                         查看当前提供的 IM\n  guide --channels telegram        查看平台接入步骤（省略渠道则显示全部）\n  init --config <文件>              创建不含凭据的配置清单\n    --channels lark,qq              选择启用的渠道\n    --env-dir <绝对目录>            已有私有环境文件所在目录\n    --data-dir <绝对目录>           持久数据目录\n    --mode readiness|live          默认 readiness\n  doctor --config <文件>            离线检查组件和私有配置\n  status --config <文件>            查看本地连接、网关和订阅状态\n  run --config <文件>               前台运行选中的组件\n    --confirm-live                 正式收发时必须明确提供\n  service render --config <文件> --output <新目录>\n  service start|stop|restart|status --config <文件>\n\nrun 通过 Ctrl+C 优雅停止。Linux 常驻运行使用生成的 systemd 服务。\n`;
 const write=value=>process.stdout.write(JSON.stringify(value,null,2)+'\n');
-const options=args=>parseArgs({args,strict:true,options:{config:{type:'string'},channels:{type:'string'},'env-dir':{type:'string'},'data-dir':{type:'string'},mode:{type:'string'},output:{type:'string'},'confirm-live':{type:'boolean'}}}).values;
+const managementHelp='\n本机可视化管理：\n  ui --config <文件>               查看八渠道状态、接入与配置\n    --port 5399                    仅监听 127.0.0.1，0 为自动选端口\n    --releases-dir <本地目录>      核对已有发行版并生成升级操作单\n  ui --demo                       查看不连接账号的演示界面\n';
+const options=args=>parseArgs({args,strict:true,options:{config:{type:'string'},channels:{type:'string'},'env-dir':{type:'string'},'data-dir':{type:'string'},mode:{type:'string'},output:{type:'string'},'confirm-live':{type:'boolean'},port:{type:'string'},demo:{type:'boolean'},'releases-dir':{type:'string'}}}).values;
 function init(value) {
   const file=path.resolve(value.config??'bridge.json');
   const selected=(value.channels??'lark,qq').split(',');
@@ -31,7 +33,7 @@ function init(value) {
 export async function main(args=process.argv.slice(2)) {
   try {
     assertNode();const command=args[0]??'help';
-    if(['help','--help','-h'].includes(command)){process.stdout.write(help);return;}
+    if(['help','--help','-h'].includes(command)){process.stdout.write(help+managementHelp);return;}
     if(command==='channels'){
       if(args.length!==1)refuse('arguments_invalid','channels 不接受其他参数。');
       write(channelIds.map(id=>({id,name:components[id].name,available:true})));return;
@@ -43,6 +45,17 @@ export async function main(args=process.argv.slice(2)) {
       const selected=value.channels===undefined?channelIds:value.channels.split(',');
       if(!selected.length||selected.some(id=>!channelIds.includes(id))||new Set(selected).size!==selected.length)refuse('channels_invalid','请选择 channels 命令列出的渠道。');
       process.stdout.write(onboardingText(selected));return;
+    }
+    if(command==='ui'){
+      if(Object.keys(value).some(key=>!['config','port','demo','releases-dir'].includes(key)))refuse('arguments_invalid','ui 仅接受 --config、--port、--releases-dir 或 --demo。');
+      if(value.demo&&(value.config||value['releases-dir']))refuse('arguments_invalid','演示模式不读取真实配置或发行目录。');
+      if(!value.demo&&!value.config)refuse('config_required','请使用 --config 指定清单；只看演示可使用 --demo。');
+      if(value.port!==undefined&&(!/^\d{1,5}$/u.test(value.port)||Number(value.port)>65535))refuse('arguments_invalid','请使用 0 至 65535 的本机端口。');
+      const ui=await startManagement({configFile:value.config?path.resolve(value.config):undefined,demo:Boolean(value.demo),port:value.port===undefined?5399:Number(value.port),releasesDir:value['releases-dir']?path.resolve(value['releases-dir']):undefined});
+      write({managementUrl:ui.url,demo:Boolean(value.demo),listener:'127.0.0.1',credentialsPrinted:false});
+      const stop=()=>{void ui.close();};process.once('SIGINT',stop);process.once('SIGTERM',stop);
+      try{await ui.closed;}finally{process.off('SIGINT',stop);process.off('SIGTERM',stop);}
+      return;
     }
     const allowed=command==='init'?['config','channels','env-dir','data-dir','mode']:
       command==='run'?['config','confirm-live']:

@@ -91,6 +91,16 @@ sudo node bin/dotbridge.js service status --config ./bridge.json
 
 `guide` 列出各平台的接入步骤，`doctor` 检查安装与私有配置，`status` 分别显示网关和订阅状态。订阅失败时，新渠道会记录最近一次失败的阶段，方便判断下一步该处理什么。实际收发还需要官方 Tunnel 连通和原 dot 的有效订阅。
 
+## 本机管理界面
+
+在浏览器中查看八渠道连接进度、本人配对与原 dot 订阅步骤，保存下次启动使用的渠道，并检查本机已有发行版：
+
+```bash
+node bin/dotbridge.js ui --config /var/lib/dot-bridge/bridge.json
+```
+
+打开命令显示的本机地址。先看演示可以使用 `node bin/dotbridge.js ui --demo`，不会连接账号。界面不接收密钥或身份值，不自动启动第二套消费者；配置保存、备份与升级安排见[本机管理说明](docs/management.md)。
+
 ## 项目组成
 
 | 项目 | 职责 |

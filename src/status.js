@@ -6,6 +6,24 @@ const reasons=new Set(['invalid_request','callback_policy_required','transport_u
 const codes=new Set([-32602,-32603,-32012,-32013,-32014,-32015]);
 const host=value=>typeof value==='string'&&value.length<=253&&/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z][a-z0-9-]*$/u.test(value);
 const boolean=value=>typeof value==='boolean'?value:null;
+const iso=value=>typeof value==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/u.test(value)&&Number.isFinite(Date.parse(value));
+const count=value=>Number.isSafeInteger(value)&&value>=0&&value<=2147483647;
+const pick=(value,allowed)=>allowed.includes(value)?value:null;
+
+function safeSubscription(value){
+ if(!value||!['none','active','expired','disabled','unknown'].includes(value.state)||value.renewal_owner!=='host')return null;
+ return {state:value.state,expiresAt:iso(value.expires_at)?value.expires_at:null,remainingSeconds:count(value.remaining_seconds)?value.remaining_seconds:null,renewalOwner:'host',diagnosticsAvailable:boolean(value.diagnostics_available)};
+}
+function safeConnection(value){
+ if(!value)return null;
+ const stage=pick(value.stage,['gateway','callback_policy','subscription','ready']);
+ const reason=pick(value.reason,['gateway_disconnected','callback_hosts_empty','callback_host_not_allowlisted','subscription_missing','subscription_expired','subscription_disabled','subscription_failed','subscription_unknown','ready']);
+ const nextStep=pick(value.next_step,['check_gateway','approve_callback_hostname','subscribe_in_original_dot','renew_in_original_dot','inspect_subscription_diagnostics','none']);
+ if(!stage||!reason||!nextStep)return null;
+ return {stage,reason,nextStep,callbackHostCount:count(value.callback_hosts_count)?value.callback_hosts_count:null,diagnosticHistory:pick(value.diagnostic_history,['available','unavailable']),callbackHostsConfigured:boolean(value.callback_hosts_configured),legacyCallbackAliasPresent:boolean(value.legacy_callback_alias_present)};
+}
+function safeWork(value){return value&&['pending','processing','uncertain'].every(key=>count(value[key]))?{pending:value.pending,processing:value.processing,uncertain:value.uncertain}:null;}
+function safeReplyCapabilities(value){return value&&count(value.max_text_chars)&&count(value.native_text_chars)&&['file','chunks','none'].includes(value.long_reply_mode)?{maxTextChars:value.max_text_chars,nativeTextChars:value.native_text_chars,longReplyMode:value.long_reply_mode}:null;}
 
 export function safeChannelStatus(id,config,value) {
   const attempts=Array.isArray(value?.subscription_diagnostics)?value.subscription_diagnostics.slice(-5):[];
@@ -15,7 +33,10 @@ export function safeChannelStatus(id,config,value) {
   return {channel:id,authenticatedMcpReachable:true,bindingReady:boolean(value?.binding_ready),
     gatewayConnected:boolean(value?.gateway_connected),subscriptionActive:boolean(value?.subscription_active??value?.mcp_subscription_active),
     callbackHostCount:config.callbackHosts?.length??0,pendingMessageCount:Array.isArray(value?.pending_messages)?value.pending_messages.length:null,
-    subscriptionDiagnostics,diagnosticHistoryAvailable:Array.isArray(value?.subscription_diagnostics)};
+    subscriptionDiagnostics,diagnosticHistoryAvailable:Array.isArray(value?.subscription_diagnostics),
+    subscriptionStatus:safeSubscription(value?.subscription_status),connectionStatus:safeConnection(value?.connection_status),replyWork:safeWork(value?.reply_work),
+    mediaReadiness:typeof value?.media_readiness?.reply_publisher_configured==='boolean'?{replyPublisherConfigured:value.media_readiness.reply_publisher_configured,replyPublisherRequired:boolean(value.media_readiness.reply_publisher_required)}:null,
+    replyCapabilities:safeReplyCapabilities(value?.reply_capabilities)};
 }
 
 export async function inspectChannels(plan,{inspect=inspectMcp,readiness=inspectReadiness}={}) {

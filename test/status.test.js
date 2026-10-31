@@ -39,3 +39,10 @@ test('legacy setup configuration never stands in for gateway or subscription sta
 test('guide rejects an explicitly empty channel list',()=>{
  const result=spawnSync(process.execPath,['bin/dotbridge.js','guide','--channels',''],{encoding:'utf8',windowsHide:true});assert.equal(result.status,1);assert.equal(JSON.parse(result.stdout).error,'channels_invalid');
 });
+
+test('management projection accepts only actual fixed subscription, connection and full queue fields',()=>{
+ const value=safeChannelStatus('telegram',{callbackHosts:[]},{subscription_status:{state:'active',expires_at:'2026-11-01T00:00:00.000Z',remaining_seconds:3600,renewal_owner:'host',diagnostics_available:true,secret:'private'},connection_status:{stage:'subscription',reason:'subscription_failed',next_step:'inspect_subscription_diagnostics',callback_hosts_count:0,diagnostic_history:'available',owner:'private'},reply_work:{pending:11,processing:2,uncertain:1,identity:'private'}});
+ assert.equal(value.subscriptionStatus.expiresAt,'2026-11-01T00:00:00.000Z');assert.equal(value.replyWork.pending,11);assert.equal(value.connectionStatus.reason,'subscription_failed');assert.equal(JSON.stringify(value).includes('private'),false);
+ const bad=safeChannelStatus('telegram',{}, {subscription_status:{state:'active',expires_at:'private callback',renewal_owner:'attacker'},connection_status:{stage:'subscription',reason:'private_identity',next_step:'inspect_subscription_diagnostics'},reply_work:{pending:-1,processing:0,uncertain:0}});
+ assert.equal(bad.subscriptionStatus,null);assert.equal(bad.connectionStatus,null);assert.equal(bad.replyWork,null);
+});
