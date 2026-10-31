@@ -46,3 +46,15 @@ test('management projection accepts only actual fixed subscription, connection a
  const bad=safeChannelStatus('telegram',{}, {subscription_status:{state:'active',expires_at:'private callback',renewal_owner:'attacker'},connection_status:{stage:'subscription',reason:'private_identity',next_step:'inspect_subscription_diagnostics'},reply_work:{pending:-1,processing:0,uncertain:0}});
  assert.equal(bad.subscriptionStatus,null);assert.equal(bad.connectionStatus,null);assert.equal(bad.replyWork,null);
 });
+
+test('management keeps only recognized callback setting names and boolean mismatch flags',()=>{
+ const connection={stage:'callback_policy',reason:'callback_hosts_empty',next_step:'approve_callback_hostname',callback_hosts_count:0,diagnostic_history:'unavailable',callback_setting_name:'MCP_CALLBACK_ALLOWED_HOSTS',wrong_callback_setting_present:true};
+ const value=safeChannelStatus('lark',{}, {connection_status:connection});
+ assert.equal(value.connectionStatus.callbackSettingName,'MCP_CALLBACK_ALLOWED_HOSTS');
+ assert.equal(value.connectionStatus.wrongCallbackSettingPresent,true);
+ const observed=safeChannelStatus('lark',{callbackHosts:['not-yet-loaded.example.com']},{connection_status:connection});
+ assert.equal(observed.callbackHostCount,0);
+ const rejected=safeChannelStatus('lark',{}, {connection_status:{...connection,callback_setting_name:'private-value',wrong_callback_setting_present:'private-value'}});
+ assert.equal(rejected.connectionStatus.callbackSettingName,null);assert.equal(rejected.connectionStatus.wrongCallbackSettingPresent,null);
+ assert.equal(JSON.stringify(rejected).includes('private-value'),false);
+});

@@ -33,6 +33,17 @@ export function channelPresentation(value,{selected=true,mode='live',now=Date.no
   if(!value?.authenticatedMcpReachable)return {state:'unreachable',label:'服务未连接',tone:'warning',detail:'先确认对应桥服务已启动。'};
   if(mode==='readiness')return {state:'readiness',label:'仅预检',tone:'quiet',detail:'当前模式不连接真实聊天账号。'};
   if(value.bindingReady===false)return {state:'needs_pairing',label:'待本人配对',tone:'warning',detail:'在私密终端完成本人确认，再刷新状态。'};
+  if(value.connectionStatus?.stage==='callback_policy')return {state:'callback_policy',label:'通知域名待核对',tone:'warning',detail:'原 dot 的通知地址需要核对批准。请在接入页查看实际配置及脱敏诊断。'};
+  // Lark and QQ deliberately wait for an authorized subscription before
+  // starting their gateway. Preserve the observed false value and explain
+  // that dependency instead of diagnosing a network failure.
+  if(value.connectionStatus?.stage==='subscription'&&value.subscriptionActive!==true){
+    if(value.subscriptionStatus?.state==='expired')return {state:'subscription_expired',label:'订阅已到期',tone:'warning',detail:value.gatewayConnected===false?'平台连接正在等待原 dot 续订，请先恢复原事件订阅。':'请原 dot 续订原事件任务，再确认自动回复。'};
+    if(value.subscriptionStatus?.state==='disabled')return {state:'subscription_disabled',label:'订阅已停用',tone:'quiet',detail:'请原 dot 确认是否恢复原事件订阅，再核对平台连接。'};
+    if(value.connectionStatus.reason==='subscription_failed')return {state:'subscription_error',label:'订阅尚未完成',tone:'warning',detail:'先查看上次请求的脱敏诊断，再由原 dot 处理，避免连续重复创建。'};
+    if(value.connectionStatus.reason==='subscription_unknown')return {state:'unknown',label:'订阅待核对',tone:'quiet',detail:'现有记录无法确认有效性，请原 dot 检查原任务，确认前不重复创建。'};
+    return {state:'needs_subscription',label:'待 dot 订阅',tone:'warning',detail:value.gatewayConnected===false?'请原 dot 完成事件订阅；此渠道会在订阅有效后继续连接平台。':'请原 dot 完成事件订阅，再从本人私聊确认自动回复。'};
+  }
   if(value.gatewayConnected===false)return {state:'gateway_offline',label:'平台未连接',tone:'warning',detail:'检查平台登录、网络连接及旧消费者是否已停止。'};
   if(value.subscriptionActive!==true&&value.subscriptionStatus?.state==='expired')return {state:'subscription_expired',label:'订阅已到期',tone:'warning',detail:'请原 dot 恢复或续订此渠道。'};
   if(value.subscriptionActive!==true&&value.subscriptionStatus?.state==='disabled')return {state:'subscription_disabled',label:'订阅已停用',tone:'quiet',detail:'请在原 dot 确认是否恢复此渠道。'};
@@ -60,7 +71,7 @@ export function setupGuide(id,value) {
   return {steps:[...item.steps],console:item.console??null,credentials:[...item.credentials],commands:commands[id],
     binding:typeof value?.bindingReady==='boolean'?value.bindingReady:null,
     pairingNotice:value?.bindingReady===true?'已有本人绑定，请保留原文件；不要重新配对或覆盖。':value?.bindingReady===false?'本人配对尚未就绪。先确认旧消费者已停止，并在私密终端按组件引导操作。':'当前尚未核对本人绑定。先检查既有私有文件与服务；已有绑定应继续沿用，不要重复配对。',
-    subscriptionPrompt:`请通过现有 dot Bridge Tunnel 订阅 ${id}.message.created，限定 conversation=owner；用 get_${id}_message 读取、reply_to_${id} 回复原私聊，每条只回复一次。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
+    subscriptionPrompt:`请先检查现有 ${id}.message.created 事件任务，已有则复用并核对或续订原订阅；确认尚无才通过现有 dot Bridge Tunnel 创建一次，限定 conversation=owner。用 get_${id}_message 读取、reply_to_${id} 回复原私聊，每条只回复一次。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
     guide:`node_modules/${item.guide}`};
 }
 
@@ -200,7 +211,11 @@ export async function startManagement({configFile,demo=false,port=5399,releasesD
     const headers={'Cache-Control':'no-store','Pragma':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",'X-Frame-Options':'DENY','Cross-Origin-Resource-Policy':'same-origin','Cross-Origin-Opener-Policy':'same-origin','Permissions-Policy':'camera=(), microphone=(), geolocation=(), clipboard-read=()'};
     const send=(status,value,type='application/json; charset=utf-8')=>{response.writeHead(status,{...headers,'Content-Type':type});response.end(type.startsWith('application/json')?JSON.stringify(value):value);};
     try{
-      if(request.headers.host!==new URL(origin).host||!['127.0.0.1','::ffff:127.0.0.1'].includes(request.socket.remoteAddress)||request.headers['sec-fetch-site']==='cross-site'||(request.headers.origin&&request.headers.origin!==origin))return send(403,{ok:false,error:'local_origin_required',message:'仅允许从本机管理页面访问。'});
+      // A user may open the static landing page from an external link. Only
+      // that top-level document navigation is allowed; APIs and embedded
+      // cross-site requests retain the same origin and session protections.
+      const landingNavigation=request.method==='GET'&&request.url==='/'&&request.headers['sec-fetch-mode']==='navigate'&&request.headers['sec-fetch-dest']==='document';
+      if(request.headers.host!==new URL(origin).host||!['127.0.0.1','::ffff:127.0.0.1'].includes(request.socket.remoteAddress)||(request.headers['sec-fetch-site']==='cross-site'&&!landingNavigation)||(request.headers.origin&&request.headers.origin!==origin))return send(403,{ok:false,error:'local_origin_required',message:'仅允许从本机管理页面访问。'});
       if(typeof request.url!=='string'||request.url.length>2048||request.url.includes('?'))return send(404,{ok:false,error:'not_found'});
       const route=request.url;
       if(request.method==='GET'&&assets.has(route)){const [file,type]=assets.get(route);return send(200,fs.readFileSync(new URL(file,import.meta.url)),type);}

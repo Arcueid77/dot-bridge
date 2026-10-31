@@ -5,6 +5,40 @@ selected-channel composition, operator configuration, foreground lifecycle,
 systemd rendering, and compatibility checks. Provider behavior remains in the IM
 repositories; transport and security primitives remain in core.
 
+## Management and media composition in 0.4.0
+
+The loopback-only management entry serves the operator interface and fixed,
+redacted APIs. It does not receive credentials, create host subscriptions, run
+pairing, start consumers, or execute code from a selected release. Configuration
+writes change only channel selection, require a matching revision and explicit
+confirmation, and retain a private backup. Upgrade checks verify installed local
+artifacts and produce an administrator runbook; they do not claim cutover.
+
+Connection diagnosis distinguishes loaded callback settings from merely edited
+files, preserves the different setting names used by established and new
+providers, and never treats an intentional wait for subscription as a gateway
+failure. Complete outbound counts include retained stream and feedback work;
+an already displayed, idle feedback card is not outstanding work.
+
+The canonical MCP media budget is 5 MiB. Tests serialize the official Tunnel
+wire envelopes, including Go JSON escaping and duplicate rich-result metadata,
+against its default 10 MiB limit. A conservative additional Base64 wrapper is
+also checked. Previously queued oversized media remain intact rather than being
+sent, dropped, or changed to an unknown-outcome state during inspection.
+
+New providers preserve a single durable final reply. Long text becomes a file
+where necessary; LINE keeps its existing single-call text chunks. Weixin adds
+validated native SILK voice replies. LINE media uses a separately approved,
+short-lived HTTPS publisher with an independent signing key, bounded memory,
+and explicit opt-in. Reverse-proxy examples disable body/response disk buffering
+and URI-bearing logs. Neither temporary URL expiry nor buffer clearing is a
+claim of physical erasure. This release does not add text-to-speech synthesis.
+
+Windows browser automation was stopped because its current browser URL could
+not be identified confidently. HTTP/API tests do not replace visual acceptance.
+Unused tracked older core archives remain present; dependency locks and the npm
+override select exactly one reviewed core at runtime.
+
 ## Component interface
 
 Each IM package exposes `adapter`, `config`, `runtime/live`,
@@ -65,7 +99,7 @@ provider delivery and production cutover are separate operator activities.
 - The official Tunnel remains independently configured; the distribution never
   fabricates an owner identity, callback URL or runtime credential.
 
-The six new providers use core 0.5.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router. Media regression includes authorization revocation during upload/read, retained encrypted capacity, bounded UTF-8 rich results and no replay after uncertain sends. Pairing uses expiring nonce fixtures and real private-file permission tests. Optional SILK runs in bounded workers using codec dependencies pinned by the individual providers.
+The six new providers use core 0.6.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router. Media regression includes authorization revocation during upload/read, retained encrypted capacity, bounded UTF-8 rich results and no replay after uncertain sends. Pairing uses expiring nonce fixtures and real private-file permission tests. Optional SILK runs in bounded workers using codec dependencies pinned by the individual providers.
 
 Platform priorities are documented in `im-roadmap.md`. cc-connect is a research
 reference for platform transports; its model/agent runtime and platform code are

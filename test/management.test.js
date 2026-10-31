@@ -13,6 +13,16 @@ async function server(t,options={}){const ui=await startManagement({port:0,...op
 async function session(ui){return (await (await fetch(ui.url+'/api/session')).json()).token;}
 const post=(ui,token,route,body,headers={})=>fetch(ui.url+route,{method:'POST',headers:{Origin:ui.url,'Content-Type':'application/json','X-DotBridge-Session':token,...headers},body:JSON.stringify(body)});
 
+test('an external link can open the static page while APIs and embedded cross-site content stay blocked',async t=>{
+  const ui=await server(t,{demo:true});
+  const headers={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate','Sec-Fetch-Dest':'document'};
+  const get=(route,extra={})=>new Promise((resolve,reject)=>{http.get(ui.url+route,{headers:{...headers,...extra}},response=>{let body='';response.on('data',chunk=>body+=chunk);response.on('end',()=>resolve({status:response.statusCode,body}));}).once('error',reject);});
+  const page=await get('/');assert.equal(page.status,200);assert.ok(page.body.includes('<!doctype html>'));
+  assert.equal((await get('/api/session')).status,403);
+  assert.equal((await get('/api/state')).status,403);
+  assert.equal((await get('/',{'Sec-Fetch-Dest':'iframe'})).status,403);
+});
+
 test('channel labels require real binding, gateway and subscription instead of configuration presence',()=>{
   assert.equal(channelPresentation({authenticatedMcpReachable:true}).state,'unknown');
   assert.equal(channelPresentation({authenticatedMcpReachable:true,bindingReady:true,gatewayConnected:true,subscriptionActive:false}).state,'needs_subscription');
@@ -28,12 +38,23 @@ test('expiry warnings use actual returned expiry and missing expiry stays unknow
   assert.equal(channelPresentation({...value,subscriptionStatus:{expiresAt:'2026-10-31T01:00:00.000Z'}},{now}).state,'expiring');
   assert.equal(channelPresentation(value,{now}).state,'ready');
 });
+
+test('gateway waiting for a legacy subscription is not diagnosed as a network failure',()=>{
+  const value={authenticatedMcpReachable:true,bindingReady:true,gatewayConnected:false,subscriptionActive:false,connectionStatus:{stage:'subscription',reason:'subscription_missing'},subscriptionStatus:{state:'none'}};
+  assert.equal(channelPresentation(value).state,'needs_subscription');
+  assert.equal(channelPresentation({...value,subscriptionStatus:{state:'expired'}}).state,'subscription_expired');
+  assert.equal(channelPresentation({...value,connectionStatus:{stage:'subscription',reason:'subscription_failed'}}).state,'subscription_error');
+  assert.equal(channelPresentation({...value,subscriptionStatus:{state:'unknown'},connectionStatus:{stage:'subscription',reason:'subscription_unknown'}}).state,'unknown');
+  assert.equal(channelPresentation({...value,connectionStatus:{stage:'callback_policy',reason:'callback_hosts_empty'}}).state,'callback_policy');
+  assert.equal(channelPresentation({...value,connectionStatus:{stage:'gateway',reason:'gateway_disconnected'}}).state,'gateway_offline');
+});
 test('pairing guidance preserves an existing binding and uses original-dot event prompts',()=>{
   const guide=setupGuide('telegram',{bindingReady:true});
   assert.ok(guide.pairingNotice.includes('不要重新配对'));
   assert.ok(guide.commands[0].includes('--token-file'));
   assert.ok(guide.subscriptionPrompt.includes('telegram.message.created'));
   assert.ok(guide.subscriptionPrompt.includes('conversation=owner'));
+  assert.ok(guide.subscriptionPrompt.includes('已有则复用'));
   assert.ok(!guide.subscriptionPrompt.includes('https://'));
   assert.ok(setupGuide('qq').pairingNotice.includes('尚未核对'));
 });
