@@ -28,7 +28,7 @@ const safeName=value=>typeof value==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}
 const positiveInt=value=>Number.isSafeInteger(value)&&value>=0&&value<=2147483647;
 
 export function channelPresentation(value,{selected=true,mode='live',now=Date.now()}={}) {
-  if(!selected)return {state:'not_configured',label:'未启用',tone:'quiet',detail:'完成平台接入后，在设置中选择此渠道。'};
+  if(!selected)return {state:'not_selected',label:'未选用',tone:'quiet',detail:'当前清单未选择此渠道，不会启动或停止已有服务。'};
   if(value?.configurationError)return {state:'configuration_error',label:'配置待完善',tone:'warning',detail:'检查私有文件、运行用户及所需配置。'};
   if(!value?.authenticatedMcpReachable)return {state:'unreachable',label:'服务未连接',tone:'warning',detail:'先确认对应桥服务已启动。'};
   if(mode==='readiness')return {state:'readiness',label:'仅预检',tone:'quiet',detail:'当前模式不连接真实聊天账号。'};
@@ -59,7 +59,7 @@ export function setupGuide(id,value) {
   const item=onboarding[id];
   return {steps:[...item.steps],console:item.console??null,credentials:[...item.credentials],commands:commands[id],
     binding:typeof value?.bindingReady==='boolean'?value.bindingReady:null,
-    pairingNotice:value?.bindingReady===true?'已有本人绑定，请保留原文件；不要重新配对或覆盖。':'配对会保存平台登录或本人绑定。先确认旧消费者已停止，并在私密终端按组件引导操作。',
+    pairingNotice:value?.bindingReady===true?'已有本人绑定，请保留原文件；不要重新配对或覆盖。':value?.bindingReady===false?'本人配对尚未就绪。先确认旧消费者已停止，并在私密终端按组件引导操作。':'当前尚未核对本人绑定。先检查既有私有文件与服务；已有绑定应继续沿用，不要重复配对。',
     subscriptionPrompt:`请通过现有 dot Bridge Tunnel 订阅 ${id}.message.created，限定 conversation=owner；用 get_${id}_message 读取、reply_to_${id} 回复原私聊，每条只回复一次。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
     guide:`node_modules/${item.guide}`};
 }

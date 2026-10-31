@@ -2,7 +2,7 @@
 
 钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE 都有独立渠道组件，
 可由总入口按需启动。接收本人私聊，回复回到原会话；除文字外，dot 可以读取图片、音频和文件附件。
-企业微信收到语音时使用平台转写，没有可下载的原音频。LINE 当前只回复文字。
+企业微信收到语音时使用平台转写，没有可下载的原音频。LINE 默认回复文字，显式配置临时媒体下载入口后可回图片和语音。
 
 先查看所需渠道的接入步骤，无需准备任何凭据就能运行：
 
@@ -26,14 +26,14 @@ node node_modules/dot-weixin-bridge/scripts/login.js --credentials-file /var/lib
 
 | 渠道名 | 平台设置与使用说明 | 默认 MCP 端口 | 回复限制 |
 | --- | --- | --- | --- |
-| `dingtalk` | [钉钉](https://github.com/Arcueid77/dot-dingtalk-bridge) | 8790 | 当前每次最多 600 字符 |
-| `wecom` | [企业微信智能机器人](https://github.com/Arcueid77/dot-wecom-bridge) | 8791 | 当前每次最多 6826 字符 |
-| `weixin` | [微信 iLink](https://github.com/Arcueid77/dot-weixin-bridge) | 8792 | 当前每次最多 3800 字符；支持本人扫码登录 |
-| `discord` | [Discord Bot](https://github.com/Arcueid77/dot-discord-bridge) | 8793 | 每次最多 2000 字符 |
-| `telegram` | [Telegram Bot](https://github.com/Arcueid77/dot-telegram-bridge) | 8794 | 每次最多 4096 字符；已有 webhook 需要先协调停用 |
+| `dingtalk` | [钉钉](https://github.com/Arcueid77/dot-dingtalk-bridge) | 8790 | 600 字符以内直接显示，长回答作为文本文件 |
+| `wecom` | [企业微信智能机器人](https://github.com/Arcueid77/dot-wecom-bridge) | 8791 | 6826 字符以内直接显示，长回答作为文本文件 |
+| `weixin` | [微信 iLink](https://github.com/Arcueid77/dot-weixin-bridge) | 8792 | 3800 字符以内直接显示，长回答作为文本文件；支持本人扫码登录 |
+| `discord` | [Discord Bot](https://github.com/Arcueid77/dot-discord-bridge) | 8793 | 2000 字符以内直接显示，长回答作为文本文件 |
+| `telegram` | [Telegram Bot](https://github.com/Arcueid77/dot-telegram-bridge) | 8794 | 4096 字符以内直接显示，长回答作为文本文件；已有 webhook 需要先协调停用 |
 | `line` | [LINE Messaging API](https://github.com/Arcueid77/dot-line-bridge) | 8795 | 需在约 55 秒内完成回复；每次最多 20000 字符 |
 
-以上是组件的当前上限。超过上限会拒绝发送，不自动拆分成多次最终回复。
+以上五个渠道支持最多 20000 字符的回答。超过平台单条文字长度时，完整内容作为 `answer.txt` 发回，仍是这条原消息的一次最终回复，不静默截断或切成多次发送。LINE 的长文字在同一次回复请求中分段，总计最多 20000 字符。
 LINE 还需要公网 HTTPS webhook，由已有反向代理转发到 `127.0.0.1:8895/webhook`；
 详细配置见 LINE 仓库。这个入口与给 Tunnel 使用的 MCP 端口分开。
 
@@ -43,20 +43,22 @@ LINE 还需要公网 HTTPS webhook，由已有反向代理转发到 `127.0.0.1:8
 再用 `get_<渠道>_attachment` 读取对应内容；支持媒体回复的渠道提供 `reply_<渠道>_media`。
 飞书继续使用自身的附件与回复工具。文件来自原消息，回复也只回到原私聊。
 
-新增六个渠道读取的单个附件最多 8 MiB。发送还有各平台的格式与大小限制：
+单个附件最多 5 MiB，为经过官方 Tunnel 的序列化留出空间。发送还有各平台更小的格式与大小限制：
 
 | 渠道 | 媒体回复 |
 | --- | --- |
 | 钉钉 | 图片、文件，或不超过 60 秒的 AMR 语音；不附带额外文字 |
 | 企业微信 | 图片、文件、AMR 语音；不附带额外文字 |
-| 微信 iLink | 图片或文件；音频请作为文件发送，不显示为原生语音气泡 |
+| 微信 iLink | 图片、文件或原生语音；原生语音接受 SILK、PCM16 单声道 WAV，最多两分钟，WAV 在本机转换成 SILK；其他音频可作为文件 |
 | Discord | 图片、文件或可播放的音频附件，可带文字 |
 | Telegram | 图片、文件或语音，可带不超过 1024 字符的说明 |
-| LINE | 当前使用文字回复；平台发送图片和音频要求公网 URL，桥未附带媒体托管 |
+| LINE | 显式启用临时下载入口后，支持不超过 1 MiB 的 JPEG/PNG、60 秒及 5 MiB 以内的 M4A，可带 5000 字符说明；没有通用文件消息 |
 
 一条消息选择一种最终回复：文字或媒体。发送状态显示 `pending` 时还在队列中，
 显示 `uncertain` 时结果不明，不要再次发送。语音转写用于帮助理解内容；
 是否能直接听取原始音频由 dot 的运行环境决定。
+
+LINE 会先拿一个短期下载地址，再读取要发送的图片或语音。可以使用现有域名，不必另买服务器；这项托管默认关闭，所需域名、独立密钥和路由应先获批准。准备步骤见 [LINE 媒体托管说明](https://github.com/Arcueid77/dot-line-bridge/blob/dev/initial-channel/docs/media-hosting.md)。
 
 ## 准备平台配置
 

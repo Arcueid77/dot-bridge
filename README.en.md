@@ -16,14 +16,16 @@ All channels are bound to the owner's private conversation. Replies return to th
 | Official QQ bot | Text, images, audio, files | Text, images, native voice, files |
 | DingTalk | Text, images, audio, files | Text, images, AMR voice, files |
 | WeCom smart bot | Text, images, files; platform transcript for voice | Text, images, AMR voice, files |
-| Weixin iLink | Text, images, audio, files | Text, images, files; audio can be sent as a file |
+| Weixin iLink | Text, images, audio, files | Text, images, native voice, files |
 | Discord | Text, images, audio, files | Text, images, playable audio attachments, files |
 | Telegram | Text, images, audio, files | Text, images, voice, files |
-| LINE | Text, images, audio, files | Text; sending attachments needs public media hosting, which is not included |
+| LINE | Text, images, audio, files | Text; images and audio after explicitly configuring temporary media delivery |
 
 See [channel setup and limits](docs/new-channels.md) for formats and size limits. Audio understanding depends on the dot host. A transcript is a reference, not proof of native audio understanding. Optional local Whisper requires a protected Linux runtime.
 
 Lark media requires the corresponding interaction policy and app permissions; follow the component's configuration guide.
+
+DingTalk, WeCom, Weixin, Discord and Telegram deliver an answer as a complete text file when it exceeds the platform's single-message text limit. LINE splits long text within one reply request; media hosting remains disabled until configured, and generic file messages are not available. Audio replies use existing recordings, without automatic speech synthesis.
 
 ## Install
 

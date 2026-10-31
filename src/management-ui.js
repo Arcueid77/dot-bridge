@@ -14,7 +14,7 @@ function renderState(value){
   snapshot=value;$('sidebar-version').textContent='DotBridge '+value.installation.version;$('current-version').textContent='v'+value.installation.version;
   $('notice').classList.toggle('hidden',!value.notice);$('notice').textContent=value.notice??'';
   const selected=value.channels.filter(c=>c.selected),ready=selected.filter(c=>c.presentation.state==='ready').length,attention=selected.filter(c=>!['ready','readiness'].includes(c.presentation.state)).length;
-  replace($('summary'),[summaryCard('已启用渠道',selected.length,'/ 8 个渠道','◈'),summaryCard('链路就绪',ready,'个入口','✓'),summaryCard('需要处理',attention,'项连接进度','↗')]);
+  replace($('summary'),[summaryCard('已选渠道',selected.length,'/ 8 个渠道','◈'),summaryCard('链路就绪',ready,'个入口','✓'),summaryCard('需要处理',attention,'项连接进度','↗')]);
   $('updated').textContent='最近检查 '+new Date(value.updatedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+' · '+(value.routerReachable?'聚合入口可访问':value.routerReachable===false?'聚合入口未连接':'等待配置');
   replace($('channels'),value.channels.map(c=>{const card=node('article','channel-card'),main=node('div','channel-main'),title=node('div','channel-title'),names=node('div');names.append(node('h3',null,c.name),node('span','sub',english[c.id]));title.append(node('span','channel-symbol',symbols[c.id]),names);main.append(title,node('span','badge '+c.presentation.tone,c.presentation.label),node('p','channel-detail',c.presentation.detail));const foot=node('div','channel-footer');foot.append(node('span',null,c.selected?'原会话回复':'按需接入'));const button=node('button',null,c.selected?'查看连接 →':'开始接入 →');button.addEventListener('click',()=>{$('setup-channel').value=c.id;view('setup');});foot.append(button);card.append(main,foot);return card;}));
   const previous=$('setup-channel').value;replace($('setup-channel'),value.channels.map(c=>{const option=node('option',null,c.name);option.value=c.id;return option;}));if(value.channels.some(c=>c.id===previous))$('setup-channel').value=previous;
@@ -27,7 +27,7 @@ function setupStep(number,title,children){const row=node('div','step'),content=n
 function renderSetup(){
   if(!snapshot)return;const channel=snapshot.channels.find(c=>c.id===$('setup-channel').value)??snapshot.channels[0],guide=channel.guide,panel=node('div','panel');
   const platform=[node('p',null,'所需私密信息：'+guide.credentials.join('、')+'。只保存在受保护的文件中。')];if(guide.console){const link=node('a',null,'打开官方管理入口 ↗');link.href=guide.console;link.target='_blank';link.rel='noreferrer noopener';platform.push(link);}const list=node('ul');for(const text of guide.steps)list.append(node('li',null,text));platform.push(list);
-  const pair=[node('p',null,guide.pairingNotice)];if(guide.binding===true)pair.push(node('span','badge good','已保留本人绑定'));else{const advanced=node('details');advanced.append(node('summary',null,'在终端中完成配对'));for(const command of guide.commands)advanced.append(node('pre',null,command));advanced.append(node('p',null,'命令中的占位符需要换成已核验的私有文件路径。页面不接收 Token、身份值或配对口令。'));pair.push(advanced);}
+  const pair=[node('p',null,guide.pairingNotice)];if(guide.binding===true)pair.push(node('span','badge good','已保留本人绑定'));else{const advanced=node('details');advanced.append(node('summary',null,'首次配对：确认尚无绑定后在终端操作'));for(const command of guide.commands)advanced.append(node('pre',null,command));advanced.append(node('p',null,'命令中的占位符需要换成已核验的私有文件路径。页面不接收 Token、身份值或配对口令。'));pair.push(advanced);}
   if(channel.id==='qq'&&guide.binding!==true)pair.push(node('p',null,'先查看扫码计划并确认授权，再由本人扫描原机器人。若 QQ 页面要求新建或替换应用，请取消并先确认。确认参数用于记录已获得的许可。'));
   if(channel.id==='line')platform.push(node('p',null,'LINE 回复图片或语音时，会先拿一个临时下载地址，再去取内容。需要准备这种下载入口后才能开启媒体回复；可以使用现有域名，不必另买服务器。当前页面不会开放这个入口。'));
   if(channel.mediaReadiness?.replyPublisherRequired)platform.push(node('span','badge '+(channel.mediaReadiness.replyPublisherConfigured?'good':'quiet'),channel.mediaReadiness.replyPublisherConfigured?'临时下载入口已配置':'图片与语音回复尚待配置'));
@@ -38,7 +38,7 @@ function renderSetup(){
   const check=[node('span','badge '+channel.presentation.tone,channel.presentation.label),node('p',null,channel.presentation.detail),node('p',null,'订阅就绪后，从本人私聊发送两条不同消息，确认各回复一次。平台连接、服务存活和真实收发分别核对。')];
   if(channel.replyCapabilities?.longReplyMode==='file')check.push(node('p',null,'较长的回答会作为文本文件发回，保留完整内容。'));
   if(channel.replyCapabilities?.longReplyMode==='chunks')check.push(node('p',null,'较长的回答会在同一次回复中分段显示。'));
-  panel.append(setupStep(1,'准备平台应用',platform),setupStep(2,guide.binding===true?'本人绑定已存在':'在私密终端完成本人配对',pair),setupStep(3,'连接原 dot 的事件订阅',subscribe),setupStep(4,'刷新状态并确认回复',check));replace($('setup-content'),[panel]);
+  panel.append(setupStep(1,'准备平台应用',platform),setupStep(2,guide.binding===true?'本人绑定已存在':guide.binding===false?'在私密终端完成本人配对':'核对已有本人绑定',pair),setupStep(3,'连接原 dot 的事件订阅',subscribe),setupStep(4,'刷新状态并确认回复',check));replace($('setup-content'),[panel]);
 }
 async function refresh(){renderState(await api('/api/state'));}
 function choices(){return [...document.querySelectorAll('#channel-options input:checked')].map(i=>i.value);}

@@ -20,7 +20,7 @@ test('channel labels require real binding, gateway and subscription instead of c
   assert.equal(channelPresentation({authenticatedMcpReachable:true,bindingReady:true,gatewayConnected:true,subscriptionActive:true}).state,'ready');
   const activeUnknownTtl=channelPresentation({authenticatedMcpReachable:true,bindingReady:true,gatewayConnected:true,subscriptionActive:true,subscriptionStatus:{state:'unknown',expiresAt:null}});assert.equal(activeUnknownTtl.state,'ready');assert.ok(activeUnknownTtl.detail.includes('未提供有效期'));
   assert.equal(channelPresentation({authenticatedMcpReachable:true},{mode:'readiness'}).state,'readiness');
-  assert.equal(channelPresentation(null,{selected:false}).state,'not_configured');
+  assert.equal(channelPresentation(null,{selected:false}).state,'not_selected');
 });
 test('expiry warnings use actual returned expiry and missing expiry stays unknown',()=>{
   const now=Date.parse('2026-10-31T00:00:00.000Z'),value={authenticatedMcpReachable:true,bindingReady:true,gatewayConnected:true,subscriptionActive:true};
@@ -35,6 +35,7 @@ test('pairing guidance preserves an existing binding and uses original-dot event
   assert.ok(guide.subscriptionPrompt.includes('telegram.message.created'));
   assert.ok(guide.subscriptionPrompt.includes('conversation=owner'));
   assert.ok(!guide.subscriptionPrompt.includes('https://'));
+  assert.ok(setupGuide('qq').pairingNotice.includes('尚未核对'));
 });
 test('demo is explicitly synthetic, serves eight channels and applies browser isolation headers',async t=>{
   const ui=await server(t,{demo:true}),response=await fetch(ui.url),html=await response.text();

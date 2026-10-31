@@ -20,7 +20,7 @@ function safeConnection(value){
  const reason=pick(value.reason,['gateway_disconnected','callback_hosts_empty','callback_host_not_allowlisted','subscription_missing','subscription_expired','subscription_disabled','subscription_failed','subscription_unknown','ready']);
  const nextStep=pick(value.next_step,['check_gateway','approve_callback_hostname','subscribe_in_original_dot','renew_in_original_dot','inspect_subscription_diagnostics','none']);
  if(!stage||!reason||!nextStep)return null;
- return {stage,reason,nextStep,callbackHostCount:count(value.callback_hosts_count)?value.callback_hosts_count:null,diagnosticHistory:pick(value.diagnostic_history,['available','unavailable']),callbackHostsConfigured:boolean(value.callback_hosts_configured),legacyCallbackAliasPresent:boolean(value.legacy_callback_alias_present)};
+ return {stage,reason,nextStep,callbackHostCount:count(value.callback_hosts_count)?value.callback_hosts_count:null,diagnosticHistory:pick(value.diagnostic_history,['available','unavailable']),callbackHostsConfigured:boolean(value.callback_hosts_configured),legacyCallbackAliasPresent:boolean(value.legacy_callback_alias_present),callbackSettingName:pick(value.callback_setting_name,['CALLBACK_HOSTS','MCP_CALLBACK_ALLOWED_HOSTS'])};
 }
 function safeWork(value){return value&&['pending','processing','uncertain'].every(key=>count(value[key]))?{pending:value.pending,processing:value.processing,uncertain:value.uncertain}:null;}
 function safeReplyCapabilities(value){return value&&count(value.max_text_chars)&&count(value.native_text_chars)&&['file','chunks','none'].includes(value.long_reply_mode)?{maxTextChars:value.max_text_chars,nativeTextChars:value.native_text_chars,longReplyMode:value.long_reply_mode}:null;}
