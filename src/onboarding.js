@@ -12,6 +12,6 @@ export const onboarding=Object.freeze({
 export function onboardingText(ids) {
   return ids.map(id=>{
     const item=onboarding[id];
-    return `${item.name}\n${item.console?item.console+'\n':''}${item.steps.map((step,i)=>`${i+1}. ${step}`).join('\n')}\n私密交接：${item.credentials.join('、')}。\n组件说明：node_modules/${item.guide}\n原 dot 订阅：${id}.message.created，conversation=owner。`;
+    return `${item.name}\n${item.console?item.console+'\n':''}${item.steps.map((step,i)=>`${i+1}. ${step}`).join('\n')}\n私密交接：${item.credentials.join('、')}。\n组件说明：node_modules/${item.guide}\n原 dot 订阅：${id}.message.created，conversation=owner。\n附件：使用 get_${id}_attachment 读取支持的附件；回发原附件使用 reply_${id}_attachment，每条原消息只选择一个最终回复。`;
   }).join('\n\n')+'\n\nToken、Secret 和身份值只保存到私有配置。完成配置后运行 doctor，再检查 status；原 dot 建立有效订阅后，从本人私聊验收。\n';
 }

@@ -71,7 +71,7 @@ export function setupGuide(id,value) {
   return {steps:[...item.steps],console:item.console??null,credentials:[...item.credentials],commands:commands[id],
     binding:typeof value?.bindingReady==='boolean'?value.bindingReady:null,
     pairingNotice:value?.bindingReady===true?'已有本人绑定，请保留原文件；不要重新配对或覆盖。':value?.bindingReady===false?'本人配对尚未就绪。先确认旧消费者已停止，并在私密终端按组件引导操作。':'当前尚未核对本人绑定。先检查既有私有文件与服务；已有绑定应继续沿用，不要重复配对。',
-    subscriptionPrompt:`请先检查现有 ${id}.message.created 事件任务，已有则复用并核对或续订原订阅；确认尚无才通过现有 dot Bridge Tunnel 创建一次，限定 conversation=owner。用 get_${id}_message 读取、reply_to_${id} 回复原私聊，每条只回复一次。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
+    subscriptionPrompt:`请先检查现有 ${id}.message.created 事件任务，已有则复用并核对或续订原订阅；确认尚无才通过现有 dot Bridge Tunnel 创建一次，限定 conversation=owner。用 get_${id}_message 读取、reply_to_${id} 回复文字；支持的附件用 get_${id}_attachment 读取，需回发原附件时用 reply_${id}_attachment 按编号操作。每条原消息只选择一个最终回复，不重复发送。文件摘录标记为 truncated 时只是一部分，语音转写不代表听到了原音频。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
     guide:`node_modules/${item.guide}`};
 }
 

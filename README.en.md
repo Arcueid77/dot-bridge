@@ -6,6 +6,9 @@ This repository is the unified installation and operations entry point. Select L
 
 [简体中文](README.md) · [Operations](docs/operations.en.md) · [IM candidates](docs/im-roadmap.md)
 
+
+Received attachments can be reused by their source-message index, without copying Base64 through the model. Platform format, size and media-configuration limits still apply. Plain UTF-8 and BOM-marked UTF-16 documents include bounded text excerpts; truncated excerpts are explicitly marked and the original file remains available.
+
 ## Available channels
 
 All channels are bound to the owner's private conversation. Replies return to that conversation.

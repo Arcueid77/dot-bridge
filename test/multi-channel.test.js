@@ -13,6 +13,15 @@ import {createUpstreamClient} from '@dot-bridge/core/router/upstream.js';
 import {beforeFixtureCleanup,privateMkdirSync} from '@dot-bridge/core/platform/test-fixtures.js';
 
 const newIds=['dingtalk','wecom','weixin','discord','telegram','line'];
+test('all eight packaged live adapters support bound source attachment replies without routing inputs',()=>{
+ for(const id of ['lark','qq','dingtalk','wecom','weixin','discord','telegram','line']){
+  const tool=components[id].adapter.liveTools.find(item=>item.name===`reply_${id}_attachment`);
+  assert.ok(tool,`${id} source attachment tool missing from the installed package`);
+  assert.equal(tool.annotations.readOnlyHint,false);assert.equal(tool.inputSchema.additionalProperties,false);
+  assert.ok(tool.inputSchema.required.includes('message_id'));assert.ok(tool.inputSchema.required.includes('attachment_index'));
+  for(const name of ['url','path','recipient','source_message_id','data'])assert.equal(Object.hasOwn(tool.inputSchema.properties,name),false);
+ }
+});
 async function extraPorts(count){const servers=await Promise.all(Array.from({length:count},()=>new Promise(resolve=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>resolve(s));})));const ports=servers.map(s=>s.address().port);await Promise.all(servers.map(s=>new Promise(r=>s.close(r))));return ports;}
 test('all eight installed channels run provider-disabled readiness and authenticate through their actual adapters',async t=>{
  const f=await fixture(t),ports=await extraPorts(newIds.length),channels={...f.config.channels};
