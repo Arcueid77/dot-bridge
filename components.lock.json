@@ -21,7 +21,7 @@
       "package": "dot-qq-bridge",
       "version": "0.6.0",
       "repository": "https://github.com/Arcueid77/dot-qq-bridge",
-      "revision": "8a34cfe60ded31a0043e2b56922cef75bf3abaec",
+      "revision": "b816d940981c8a138e7aaf12db73cd96433bbbd8",
       "artifact": "vendor/dot-qq-bridge-0.6.0.tgz",
       "sha256": "65b2359aef98acbda4611dddc29c49dd6a93b00d0cc85f81b495f346e19ce848"
     },
