@@ -5,8 +5,9 @@ private chat. Once, daily and weekly reminders persist in the bridge's original
 encrypted database and survive restarts. Generated content needs an actual task
 saved on the original dot, which later calls the target channel's send tool.
 
-Lark, QQ, Telegram, Discord, DingTalk, WeCom and LINE have implementation support.
-Weixin iLink remains capability-only for independent proactive delivery. Enable
+Lark, QQ, Weixin iLink, Telegram, Discord, DingTalk, WeCom and LINE have implementation support.
+Weixin independent sends use the existing login without an inbound context token;
+verify acceptance with the paired owner account before relying on reminders. Enable
 only an authorized channel by setting `DOT_BRIDGE_OUTBOUND=owner-text` in its
 protected backend environment, restarting it and the router, and refreshing the
 original plugin's tools. The default is `disabled`; inbound subscriptions stay
@@ -25,6 +26,15 @@ event ID, passive sequence or caller-supplied recipient. Delivery does not depen
 on the incoming gateway or event subscription. Ordinary incoming messages still
 use the original dot event subscription.
 
+## Weixin platform acceptance
+
+Weixin independent requests omit `context_token` and never read a cached inbound
+token. The [Tencent protocol reference](https://github.com/Tencent/openclaw-weixin/blob/main/docs/protocol.md)
+describes this client behavior; account acceptance must be verified using an actual
+request. An explicit nonzero business response, permission denial, or quota response
+persists as `rejected` and pauses the reminder. A missing ACK, server error, or lost
+connection remains `uncertain`. Neither outcome is automatically retried.
+
 ## Tools and saved intent
 
 For a supported channel, use `check_<channel>_outbound`,
@@ -40,7 +50,7 @@ for retries of the same intent. Missing reminders more than five minutes late ar
 skipped after downtime, avoiding a burst of stale sends.
 
 `pending`/`active` means saved work. `sent` means provider acknowledgement, not
-recipient reading. QQ explicit permission/quota rejection becomes `rejected` with
+recipient reading. QQ and Weixin explicit business/permission/quota rejection becomes `rejected` with
 `provider_permission_denied`, `provider_quota_exhausted`, or `provider_rejected`.
 Recurring work pauses. Timeouts, malformed/lost ACKs and 5xx remain `uncertain`.
 Neither state retries automatically; inspect the saved ID and actual platform/chat

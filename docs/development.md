@@ -132,3 +132,15 @@ Source attachment replies use the existing encrypted media outbox format. The ge
 Platform priorities are documented in `im-roadmap.md`. cc-connect is a research
 reference for platform transports; its model/agent runtime and platform code are
 not vendored by this repository.
+
+## 0.8.0 owner-message package
+
+Weixin now implements the shared owner-only proactive text and durable reminder
+contract without reading or reusing an inbound context token. Explicit platform
+refusals remain rejected; missing acknowledgements and transport failures remain
+uncertain. Actual account acceptance and visible receipt need live verification.
+
+All eight component packages pin the same reviewed core 0.10.0 artifact. The
+distribution retains the nine current component archives; historical releases
+remain reproducible from their exact Git revisions. Runtime data and rollback
+state stay outside these source artifacts.
