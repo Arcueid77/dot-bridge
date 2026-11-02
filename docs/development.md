@@ -1,5 +1,24 @@
 # Development and release composition
 
+## QQ owner notifications in 0.7.0
+
+This composition pins QQ 0.7.0 and one shared core 0.9.0 across every component.
+QQ exposes owner-only proactive text and saved once/daily/weekly reminders,
+disabled by default. It uses the original private database and storage key,
+independently of inbound subscriptions. Explicit provider rejection persists as
+`rejected` and pauses recurrence; unknown outcomes remain `uncertain` without
+automatic retry. Current application eligibility and quota still need verification
+because the official SDK and platform suspension notice give different guidance.
+
+Source tests cover restart persistence, owner binding, duplicate intents,
+permission/quota refusal, malformed ACKs, token-time revocation, and the expanded
+catalog/list byte budgets. The actual QQ/Lark sibling catalog contains 32 tools.
+The distribution tests the installed QQ adapter and outbox from its immutable
+packages, including rejection projection. Local Windows validation passed QQ 264,
+core 253 (5 Linux-only skips), Lark 274 (16 skips), the six other providers 172,
+and distribution 33 (1 Linux-only skip). These are synthetic checks; production
+configuration, account qualification and real QQ delivery were not exercised.
+
 The distribution consumes independent component releases. It owns the CLI,
 selected-channel composition, operator configuration, foreground lifecycle,
 systemd rendering, and compatibility checks. Provider behavior remains in the IM

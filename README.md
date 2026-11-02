@@ -129,3 +129,5 @@ node bin/dotbridge.js ui --config /var/lib/dot-bridge/bridge.json
 ## 定时消息
 
 可以让原 dot 把固定提醒发到另一个已绑定的本人私聊，也可以由原 dot 的定时任务生成内容后主动发送。主动发送默认关闭，按渠道单独启用。详见[定时消息使用指南](docs/scheduled-messages.md)。
+
+QQ 也已接入本人主动文字和提醒；当前应用的主动消息资格及额度需先向平台核实。明确权限／额度拒绝会保留为 `rejected` 并暂停后续提醒，超时或未知结果保留 `uncertain`。

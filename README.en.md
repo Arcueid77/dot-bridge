@@ -1,5 +1,7 @@
 # DotBridge
 
+QQ now implements opt-in owner-only proactive text and saved reminders. Verify the actual application's platform eligibility and quota before enabling. Explicit rejection pauses work as `rejected`; ambiguous results remain `uncertain`. See the [reminder guide](docs/scheduled-messages.en.md).
+
 Connect your chat apps to your existing ChatGPT dot. Send a message from your familiar chat app and let the same dot handle it and reply.
 
 This repository is the unified installation and operations entry point. Select Lark, QQ, DingTalk, WeCom, Weixin iLink, Discord, Telegram or LINE as needed. Each channel remains maintained in its own repository.
