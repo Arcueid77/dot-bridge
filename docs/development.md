@@ -19,6 +19,13 @@ core 253 (5 Linux-only skips), Lark 274 (16 skips), the six other providers 172,
 and distribution 33 (1 Linux-only skip). These are synthetic checks; production
 configuration, account qualification and real QQ delivery were not exercised.
 
+Standalone QQ/Lark CI also runs Linux and Windows. The hosted Windows bootstrap
+temporarily makes its test process create files owned by the current user,
+matching the final service-user model, and restores the prior token default
+owner afterward. Production ownership/DACL checks are unchanged. These CI files
+are excluded from component packages; advancing their source provenance keeps
+the previously reviewed component archives byte-identical.
+
 The distribution consumes independent component releases. It owns the CLI,
 selected-channel composition, operator configuration, foreground lifecycle,
 systemd rendering, and compatibility checks. Provider behavior remains in the IM

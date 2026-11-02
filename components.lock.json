@@ -13,7 +13,7 @@
       "package": "dot-lark-bridge",
       "version": "0.5.2",
       "repository": "https://github.com/Arcueid77/dot-lark-bridge",
-      "revision": "f532fd90b3d92e3b31189e9fd2b1d30d6f174536",
+      "revision": "29e368286cd91ab464b7e7b7f07d488d412fbc19",
       "artifact": "vendor/dot-lark-bridge-0.5.2.tgz",
       "sha256": "7f8a301ea5bafc9b9bd27a9132c07b4f7b1c218457619e5a74b11533a63d52a3"
     },
@@ -21,7 +21,7 @@
       "package": "dot-qq-bridge",
       "version": "0.7.0",
       "repository": "https://github.com/Arcueid77/dot-qq-bridge",
-      "revision": "0b58c957ea6ceec7d280c0ea4332a1fab12de896",
+      "revision": "55a12fc960be75c3cdd7c90b1aadd2abe8a958e1",
       "artifact": "vendor/dot-qq-bridge-0.7.0.tgz",
       "sha256": "42ec496f27ae558b8e98805caad1e3094986ee33e543bcfb77f38f2cb5ace633"
     },
