@@ -125,3 +125,6 @@ node bin/dotbridge.js ui --config /var/lib/dot-bridge/bridge.json
 当前可启动的渠道以 `channels` 命令为准；[IM 扩展计划](docs/im-roadmap.md)记录后续方向。Slack 使用已有官方支持，不安排独立桥接组件。
 
 开发与版本维护见[开发说明](docs/development.md)。
+## 定时消息
+
+可以让原 dot 把固定提醒发到另一个已绑定的本人私聊，也可以由原 dot 的定时任务生成内容后主动发送。主动发送默认关闭，按渠道单独启用。详见[定时消息使用指南](docs/scheduled-messages.md)。

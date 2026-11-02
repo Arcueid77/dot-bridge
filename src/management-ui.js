@@ -39,7 +39,8 @@ function renderSetup(){
   const check=[node('span','badge '+channel.presentation.tone,channel.presentation.label),node('p',null,channel.presentation.detail),node('p',null,'订阅就绪后，从本人私聊发送两条不同消息，确认各回复一次。平台连接、服务存活和真实收发分别核对。')];
   if(channel.replyCapabilities?.longReplyMode==='file')check.push(node('p',null,'较长的回答会作为文本文件发回，保留完整内容。'));
   if(channel.replyCapabilities?.longReplyMode==='chunks')check.push(node('p',null,'较长的回答会在同一次回复中分段显示。'));
-  panel.append(setupStep(1,'准备平台应用',platform),setupStep(2,guide.binding===true?'本人绑定已存在':guide.binding===false?'在私密终端完成本人配对':'核对已有本人绑定',pair),setupStep(3,'连接原 dot 的事件订阅',subscribe),setupStep(4,'刷新状态并确认回复',check));replace($('setup-content'),[panel]);
+  const reminders=node('details');reminders.append(node('summary',null,'让 dot 定时给我发消息'),node('p',null,'主动发送需管理员按渠道单独开启。固定文字提醒保存在服务器；动态内容由原 dot 保存定时任务。QQ 和微信 iLink 暂不开放独立主动推送。'),node('pre',null,guide.outboundPrompt));
+  panel.append(setupStep(1,'准备平台应用',platform),setupStep(2,guide.binding===true?'本人绑定已存在':guide.binding===false?'在私密终端完成本人配对':'核对已有本人绑定',pair),setupStep(3,'连接原 dot 的事件订阅',subscribe),setupStep(4,'刷新状态并确认回复',check),reminders);replace($('setup-content'),[panel]);
 }
 async function refresh(){renderState(await api('/api/state'));}
 function choices(){return [...document.querySelectorAll('#channel-options input:checked')].map(i=>i.value);}
