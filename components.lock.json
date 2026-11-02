@@ -11,11 +11,11 @@
     },
     "lark": {
       "package": "dot-lark-bridge",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "repository": "https://github.com/Arcueid77/dot-lark-bridge",
-      "revision": "05ebfddee6250874a46cfe8ee82b5dca80293d8b",
-      "artifact": "vendor/dot-lark-bridge-0.5.0.tgz",
-      "sha256": "bc8ef57430e956233b507c0e879476bcf9759ae0c6ea44bd039211661837fb44"
+      "revision": "2daab171d414b34cc405c6a40a2dee87ef2684e8",
+      "artifact": "vendor/dot-lark-bridge-0.5.1.tgz",
+      "sha256": "8218b21009c698a1b183645dc4bdd75509d165e3be9b8cb31232fa875c2216a7"
     },
     "qq": {
       "package": "dot-qq-bridge",
