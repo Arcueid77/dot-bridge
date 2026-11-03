@@ -4,6 +4,8 @@
 
 Proposed plan based on unified distribution 0.8.0, dated 2026-11-03. Advance by acceptance gates. Implementation and release evidence belong in [development notes](development.md).
 
+2026-11-04 progress: shared feedback, recent context, document excerpts, owner IM maintenance, and opt-in Telegram/Discord groups and topics are implemented in pinned component packages. The five existing channels are upgraded; original-dot tool refresh, actual interaction acceptance, and new-group activation remain separate steps. Pause/reset/approval controls await a verified official interface. See [interaction configuration](new-channels.en.md#shared-interaction-and-group-rules).
+
 ## What 1.0 delivers
 
 A stable self-hosted product that external users can install from scratch, connect to their own IM accounts and original dot, operate continuously, upgrade, back up, restore, and migrate. Keep the existing independent providers → shared core → aggregate router → official Secure MCP Tunnel → original dot architecture.
@@ -23,13 +25,13 @@ Check the target account/workspace's custom MCP access and Tunnel roles at the b
 | Owner notifications | Text, durable reminders, deduplication, cancellation, uncertain-result protection | Separate implementation support, account verification, opt-in, and latest platform outcome |
 | Weixin proactive delivery | Independent request without a cached context token implemented | Current test account rejects the request; keep the feature disabled and show sanitized diagnostics |
 | Operations | Linux systemd, private-file checks, version locks, cutover records | Complete selected-channel backup/restore, migration rehearsal, Windows persistence, and sustained acceptance |
-| Continuous validation | CI for core, QQ, Lark, and the distribution | Independent CI for the six remaining providers and clean-machine acceptance of each release archive |
+| Continuous validation | Windows/Linux CI for core, all eight providers, and the distribution | Clean-machine release installation and real-account acceptance |
 
 ## 1.0 scope
 
 - Complete real owner-private-chat acceptance for Lark, QQ, DingTalk, WeCom, Weixin iLink, Discord, Telegram, and LINE. Install and enable only the channels selected by the user.
 - Track images, original audio, transcripts, file reads, media replies, streaming updates, proactive sending, and reminders separately. Enable features according to actual platform permissions and verification.
-- Regress Lark's existing group controls: member allowlists/all members, real mentions, keyword/all-message triggers, and original-conversation replies. Schedule other providers' group extensions separately.
+- Regress Lark, Telegram and Discord group controls: member allowlists/all members, real mentions, keyword/all-message triggers, and original-conversation/topic replies. Schedule other providers' group extensions separately.
 - Qualify Linux x64 and Windows x64. Provide Linux systemd operation and complete Windows persistent operation and exit behavior. Label macOS unverified; welcome trials and feedback.
 - Keep the same dot, existing Tunnel, and original-conversation routing as the default. Manage source, configuration, data, and personal credentials separately.
 
