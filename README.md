@@ -4,7 +4,7 @@
 
 这是 DotBridge 的统一安装与运行入口。按需启用飞书、QQ、钉钉、企业微信、微信 iLink、Discord、Telegram 或 LINE；各渠道由独立项目维护。
 
-[English](README.en.md) · [安装与常驻运行](docs/operations.md) · [后续 IM 候选](docs/im-roadmap.md)
+[English](README.en.md) · [安装与常驻运行](docs/operations.md) · [1.0 路线图](docs/im-roadmap.md)
 
 ## 当前可用
 
