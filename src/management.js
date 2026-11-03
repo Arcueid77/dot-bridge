@@ -67,11 +67,11 @@ const commands={
   discord:[],line:[]
 };
 export function setupGuide(id,value) {
-  const item=onboarding[id];
+  const item=onboarding[id],scope=value?.experienceCapabilities?.configuredGroups>0?'configured':'owner',progress=id==='lark'?'每次仅提交新生成的增量，不重复之前内容':'每次提交截至当前真正生成的完整累计文本';
   return {steps:[...item.steps],console:item.console??null,credentials:[...item.credentials],commands:commands[id],
     binding:typeof value?.bindingReady==='boolean'?value.bindingReady:null,
     pairingNotice:value?.bindingReady===true?'已有本人绑定，请保留原文件；不要重新配对或覆盖。':value?.bindingReady===false?'本人配对尚未就绪。先确认旧消费者已停止，并在私密终端按组件引导操作。':'当前尚未核对本人绑定。先检查既有私有文件与服务；已有绑定应继续沿用，不要重复配对。',
-    subscriptionPrompt:`请先检查现有 ${id}.message.created 事件任务，已有则复用并核对或续订原订阅；确认尚无才通过现有 dot Bridge Tunnel 创建一次，限定 conversation=owner。用 get_${id}_message 读取、reply_to_${id} 回复文字；支持的附件用 get_${id}_attachment 读取，需回发原附件时用 reply_${id}_attachment 按编号操作。每条原消息只选择一个最终回复，不重复发送。文件摘录标记为 truncated 时只是一部分，语音转写不代表听到了原音频。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
+    subscriptionPrompt:`请先检查现有 ${id}.message.created 事件任务，已有则复用并核对或续订原订阅；确认尚无才通过现有 dot Bridge Tunnel 创建一次，限定 conversation=${scope}，群内上下文与私聊分别处理，群消息不能调用或披露私聊记忆。用 get_${id}_message 读取、如工具目录提供 get_${id}_context，需要近期上下文时使用它。仅在工具目录提供且确实开始处理时使用 begin_${id}_reply；如已启用渐进回复，${progress}，交给 append_${id}_reply，不回放完成的答案。最后用 reply_to_${id} 完成同一回复；支持的附件用 get_${id}_attachment 读取，需回发原附件时用 reply_${id}_attachment 按编号操作。每条原消息只选择一个最终回复，不重复发送。文件摘录标记为 truncated 时只是一部分，语音转写不代表听到了原音频。使用你真实生成的 callback。若需批准回调域名，请只报告精确域名，等待本人确认。若失败，只报告实际 RPC code、脱敏 reason 和 hostname，不显示完整 callback 或签名密钥，也不要连续重复创建。`,
     outboundPrompt:`请先通过现有 dot Bridge Tunnel 调用 check_${id}_outbound。仅在本人明确要求且 enabled=true 时安排主动文字或提醒，目标只允许已绑定的本人私聊。固定文字用 schedule_${id}_message 保存，核对发送时间、IANA 时区和重复提醒结束日期，并回报返回的提醒编号。修改或取消使用原编号与当前 revision。动态内容需你真正保存定时任务，到点调用 send_${id}_message，每个时段沿用稳定幂等键；未保存成功不能声称已安排。保持现有事件订阅，不自动重发 uncertain。`,
     guide:`node_modules/${item.guide}`};
 }

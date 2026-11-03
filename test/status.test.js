@@ -58,3 +58,10 @@ test('management keeps only recognized callback setting names and boolean mismat
  assert.equal(rejected.connectionStatus.callbackSettingName,null);assert.equal(rejected.connectionStatus.wrongCallbackSettingPresent,null);
  assert.equal(JSON.stringify(rejected).includes('private-value'),false);
 });
+
+
+test('interaction status exposes only bounded declared capabilities and no identity or control endpoints',()=>{
+ const capabilities={feedback_enabled:true,typing:true,reactions:true,progressive_replies:true,recent_context:true,management_commands:true,configured_groups:2,hosted_dot_controls:false,token:'private'};
+ const value=safeChannelStatus('telegram',{},{experience_capabilities:capabilities});assert.equal(value.experienceCapabilities.configuredGroups,2);assert.equal(value.experienceCapabilities.hostedDotControls,false);assert.equal(JSON.stringify(value).includes('private'),false);
+ assert.equal(safeChannelStatus('telegram',{},{experience_capabilities:{...capabilities,configured_groups:51}}).experienceCapabilities,null);assert.equal(safeChannelStatus('telegram',{},{experience_capabilities:{...capabilities,hosted_dot_controls:true}}).experienceCapabilities,null);
+});

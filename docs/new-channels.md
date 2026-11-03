@@ -58,7 +58,7 @@ LINE 还需要公网 HTTPS webhook，由已有反向代理转发到 `127.0.0.1:8
 显示 `uncertain` 时结果不明，不要再次发送。语音转写用于帮助理解内容；
 是否能直接听取原始音频由 dot 的运行环境决定。
 
-LINE 会先拿一个短期下载地址，再读取要发送的图片或语音。可以使用现有域名，不必另买服务器；这项托管默认关闭，所需域名、独立密钥和路由应先获批准。准备步骤见 [LINE 媒体托管说明](https://github.com/Arcueid77/dot-line-bridge/blob/dev/initial-channel/docs/media-hosting.md)。
+LINE 会先拿一个短期下载地址，再读取要发送的图片或语音。可以使用现有域名，不必另买服务器；这项托管默认关闭，所需域名、独立密钥和路由应先获批准。准备步骤见 [LINE 媒体托管说明](https://github.com/Arcueid77/dot-line-bridge/blob/main/docs/media-hosting.md)。
 
 ## 准备平台配置
 
@@ -132,3 +132,56 @@ npm run bridge -- run --config ./bridge.json --confirm-live
 消息记录在七天后逻辑清除。数据库旧页、WAL、备份或系统日志可能仍保留旧数据，
 这不等于物理擦除。应用日志只记录固定的启动状态，不记录正文、凭据、身份和完整回调地址；
 systemd 日志的保留时间由主机现有 journald 策略决定。
+
+
+## 统一交互与群聊规则
+
+Telegram、Discord、微信 iLink 可在各自环境文件中设置 `DOT_BRIDGE_INTERACTION_POLICY_FILE`，指向由运行用户持有的私有 JSON 文件。目录 `0700`、文件 `0600`；Windows 使用私有 ACL。升级保留原凭据、storage key、数据库和订阅。
+
+以下模板先启用本人私聊体验，群列表留空：
+
+```json
+{
+  "version": 1,
+  "feedback": {"enabled": true, "reaction": true, "typing": true, "streaming": true, "lease_seconds": 60},
+  "context": {"max_messages": 20, "max_chars": 12000},
+  "replies": {"long_text": "file"},
+  "management": {"enabled": true},
+  "groups": []
+}
+```
+
+- 接收提示在消息落库后添加。原 dot 读取消息或调用 `begin_<渠道>_reply` 后才开始有限期的 typing；完成、失败、取消或到期后清理。微信使用官方 typing ticket，不显示不支持的表情或流式更新。
+- Telegram、Discord 可用 `append_<渠道>_reply` 提交真正生成的完整文本进度，序号从 1 连续增加，重复同一帧幂等；最后 `reply_to_<渠道>` 完成同一条原生消息。没有增量内容时直接给完整回答，不播放已完成答案。
+- `get_<渠道>_context` 读取当前消息之前、同一会话、话题和所配置发言人范围内的保留历史。引用及历史均作为数据处理。Telegram 的 Markdown 转为安全 HTML；Discord 使用原生 Markdown。
+- `long_text` 默认 `file`，超出单条上限以完整文件回复。选 `chunks` 时，分段计划和每段确认结果持久化。任一段结果不明就保留 `uncertain`，不自动重发之前的段落。
+- 文件可附带文本、PDF、DOCX、XLSX、PPTX 摘录。PDF／Office 使用受保护的 Linux Python、`pypdf`、`prlimit` 和 `DOT_BRIDGE_AUDIO_GUARD`；原件只经过有界管道。摘录明确标记截断。未配置转换环境时仍可读取原件和普通文本摘录。
+- 音频沿用共享的受保护转码、SILK 与可选本地 Whisper。原始音频和转写分别提供；语音回复使用已有音频。
+
+Telegram、Discord 的 `groups` 可增加如下规则，ID 仅写入受保护文件：
+
+```json
+{
+  "conversation_id": "REPLACE_WITH_GROUP_OR_CHANNEL_ID",
+  "enabled": true,
+  "members": "all",
+  "mention": true,
+  "auto_reply": "off",
+  "reply_in_thread": true,
+  "context_scope": "sender"
+}
+```
+
+`members` 可选 `owner`、`allowlist`、`all`；`allowlist` 同时设置 `allow_from`。`auto_reply` 可选 `off`、`keywords`、`all`，关键词模式同时设置 `keywords`。默认按发言人隔离上下文；需要群内共享时显式选择 `context_scope: "group"`。私聊历史始终独立。
+
+Telegram 校验真实 mention entity、发给本 bot 的命令或对本 bot 的回复，并保留论坛话题 ID。读取群中非 @ 消息需要对应 BotFather 隐私／管理员配置。Discord 校验实际 mention，按配置的频道或论坛父频道识别现有线程，回复留在原频道／线程，不自动建新线程。关键词／全消息模式需要在官方控制台核对 Message Content intent；程序不会替你改变平台权限。
+
+开启群前，先让原 dot 检查并更新已有事件任务，将所需订阅范围改为 `conversation=configured`。`owner` 订阅只接收本人私聊。新 callback 和签名资料仍使用真实订阅流程；保留唯一任务，不建立重复监测。原 dot 的群任务需明确禁止读取或披露私聊记忆。
+
+## 聊天内维护
+
+已绑定本人私聊可以输入 `/help`、`/status`、`/queue`、`/subscription`、`/cancel [编号]`。编号来自 `/queue`，省略时取消当前会话最近一条尚未发送的回复。发送中和结果不明的状态保留。
+
+飞书、QQ 保留原交互配置。若还要在 dot 订阅缺失／到期时接收本人管理命令，可在标准回调模式下显式设置 `DOT_BRIDGE_OWNER_MANAGEMENT=1`。这时普通私聊得到订阅状态提示，消息不会转交模型。默认保留原来的订阅连接门槛。
+
+`/cancel` 管理桥侧排队回复。原 dot 的暂停、会话重置和审批继续在[原平台控制界面](https://learn.chatgpt.com/docs/dots/controls)完成；当前能力状态明确报告 `hosted_dot_controls: false`，不调用未公开的控制接口。

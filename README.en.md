@@ -13,7 +13,7 @@ Received attachments can be reused by their source-message index, without copyin
 
 ## Available channels
 
-All channels are bound to the owner's private conversation. Replies return to that conversation.
+All channels default to the owner's private conversation. Lark, Telegram and Discord may explicitly opt into protected groups/topics. Replies return to the original conversation.
 
 | Channel | Receive | Reply |
 | --- | --- | --- |
@@ -26,7 +26,19 @@ All channels are bound to the owner's private conversation. Replies return to th
 | Telegram | Text, images, audio, files | Text, images, voice, files |
 | LINE | Text, images, audio, files | Text; images and audio after explicitly configuring temporary media delivery |
 
-See [channel setup and limits](docs/new-channels.md) for formats and size limits. Audio understanding depends on the dot host. A transcript is a reference, not proof of native audio understanding. Optional local Whisper requires a protected Linux runtime.
+## Interaction capabilities
+
+| Capability | Lark | QQ | Weixin iLink | Telegram | Discord |
+| --- | --- | --- | --- | --- | --- |
+| Processing feedback | Reactions/status card | Native input notice | Official typing | Reaction/typing | Reaction/typing |
+| Progressive replies | Same card | Native stream | Not offered | Edit one message | Edit one message |
+| Recent context | Yes | Yes | Yes | Yes | Yes |
+| Group/topic rules | Opt-in | Owner private | Owner private | Opt-in | Opt-in |
+| Owner chat commands | Yes | Yes | Yes | Yes | Yes |
+
+New groups stay disabled. Protected per-channel policy controls feedback, genuine progressive updates and long-text parts. See [shared interactions](docs/new-channels.en.md#shared-interaction-and-group-rules) for configuration and hosted-dot control boundaries.
+
+See [channel setup and limits](docs/new-channels.en.md) for formats and size limits. Audio understanding depends on the dot host. A transcript is a reference, not proof of native audio understanding. Optional local Whisper requires a protected Linux runtime.
 
 Lark media requires the corresponding interaction policy and app permissions; follow the component's configuration guide.
 

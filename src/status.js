@@ -24,6 +24,10 @@ function safeConnection(value){
 }
 function safeWork(value){return value&&['pending','processing','uncertain'].every(key=>count(value[key]))?{pending:value.pending,processing:value.processing,uncertain:value.uncertain}:null;}
 function safeReplyCapabilities(value){return value&&count(value.max_text_chars)&&count(value.native_text_chars)&&['file','chunks','none'].includes(value.long_reply_mode)?{maxTextChars:value.max_text_chars,nativeTextChars:value.native_text_chars,longReplyMode:value.long_reply_mode}:null;}
+function safeExperience(value){
+ if(!value||!['feedback_enabled','typing','reactions','progressive_replies','recent_context','management_commands'].every(key=>typeof value[key]==='boolean')||!count(value.configured_groups)||value.configured_groups>50||value.hosted_dot_controls!==false)return null;
+ return {feedbackEnabled:value.feedback_enabled,typing:value.typing,reactions:value.reactions,progressiveReplies:value.progressive_replies,recentContext:value.recent_context,managementCommands:value.management_commands,configuredGroups:value.configured_groups,hostedDotControls:false};
+}
 
 export function safeChannelStatus(id,config,value) {
   const connectionStatus=safeConnection(value?.connection_status);
@@ -37,7 +41,7 @@ export function safeChannelStatus(id,config,value) {
     subscriptionDiagnostics,diagnosticHistoryAvailable:Array.isArray(value?.subscription_diagnostics),
     subscriptionStatus:safeSubscription(value?.subscription_status),connectionStatus,replyWork:safeWork(value?.reply_work),
     mediaReadiness:typeof value?.media_readiness?.reply_publisher_configured==='boolean'?{replyPublisherConfigured:value.media_readiness.reply_publisher_configured,replyPublisherRequired:boolean(value.media_readiness.reply_publisher_required)}:null,
-    replyCapabilities:safeReplyCapabilities(value?.reply_capabilities)};
+    replyCapabilities:safeReplyCapabilities(value?.reply_capabilities),experienceCapabilities:safeExperience(value?.experience_capabilities),ownerManagementConnection:config.ownerManagementConnection===true};
 }
 
 export async function inspectChannels(plan,{inspect=inspectMcp,readiness=inspectReadiness}={}) {

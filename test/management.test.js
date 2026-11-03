@@ -123,3 +123,9 @@ test('upgrade operation sheet is concrete and keeps unknown queues as blockers, 
   const response=await post(ui,token,'/api/upgrade-plan',{release:'release-current'}),text=await response.text();assert.equal(response.status,200);assert.ok(response.headers.get('content-disposition').includes('attachment'));assert.ok(text.includes('npm ci --omit=dev --ignore-scripts'));assert.ok(text.includes('SQLite 一致性备份'));assert.ok(text.includes('当前组件未提供完整计数'));assert.ok(text.includes('目标版本的数据兼容性与 QQ 媒体历史'));
   assert.equal(fs.existsSync(path.join(f.directory,'release-current','node_modules')),false);
 });
+
+
+test('group setup guidance selects the configured event scope only after protected group activation',()=>{
+ assert.ok(setupGuide('telegram').subscriptionPrompt.includes('conversation=owner'));
+ const guide=setupGuide('telegram',{experienceCapabilities:{configuredGroups:1}});assert.ok(guide.subscriptionPrompt.includes('conversation=configured'));assert.ok(guide.subscriptionPrompt.includes('get_telegram_context'));assert.ok(guide.subscriptionPrompt.includes('真正生成'));assert.ok(guide.subscriptionPrompt.includes('群消息不能调用或披露私聊记忆'));
+});
