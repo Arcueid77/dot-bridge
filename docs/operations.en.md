@@ -66,7 +66,34 @@ The six generic channels retain the last five subscription attempts as encrypted
 
 Foreground output contains lifecycle state rather than raw SDK diagnostics. Generated systemd units use the host's default journal retention; a dedicated namespace and retention policy are an administrator choice and are not copied from an old VPS.
 
-Stop before changing dependencies, preserve the previous code and `node_modules`, switch to a reviewed distribution revision, run `npm ci --omit=dev --ignore-scripts --no-audit --no-fund`, run `doctor` as the runtime user, then start services. Credentials and data stay outside the checkout. Roll back code/dependencies only after checking database compatibility; never overwrite new messages with an old database snapshot. Regenerate units if absolute installation paths change.
+The runtime host can fetch the distribution directly from GitHub. The repository includes pinned core/provider artifacts. Keep configuration, credentials, databases, and subscription state outside the checkout.
+
+Use a Git cache and one detached worktree per reviewed full commit SHA. The deployment administrator initializes the cache once:
+
+```bash
+git init --bare --initial-branch=main /opt/dot-bridge/repository.git
+git --git-dir=/opt/dot-bridge/repository.git remote add origin https://github.com/Arcueid77/dot-bridge.git
+git --git-dir=/opt/dot-bridge/repository.git config remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+git --git-dir=/opt/dot-bridge/repository.git config --add remote.origin.fetch '+refs/heads/main:refs/heads/main'
+```
+
+For each deployment, replace the example `BRIDGE_REV` with a reviewed full SHA. The new release directory must not exist:
+
+```bash
+BRIDGE_REV=0d12db9b1eeda4ce82dd72df548717acdf9551e4
+BRIDGE_GIT_CACHE=/opt/dot-bridge/repository.git
+BRIDGE_RELEASE=/opt/dot-bridge/releases/git-$BRIDGE_REV
+git --git-dir="$BRIDGE_GIT_CACHE" -c http.sslVerify=true fetch --depth=1 --no-tags origin main
+git --git-dir="$BRIDGE_GIT_CACHE" -c http.sslVerify=true fetch --depth=1 --no-tags origin "$BRIDGE_REV"
+git --git-dir="$BRIDGE_GIT_CACHE" update-ref "refs/releases/$BRIDGE_REV" "$BRIDGE_REV"
+git --git-dir="$BRIDGE_GIT_CACHE" worktree add --detach "$BRIDGE_RELEASE" "$BRIDGE_REV"
+```
+
+Install dependencies in the new directory with a dedicated writable npm cache. The installation user needs write access during staging; make source and `node_modules` read-only to the runtime user afterward. Keep private data owned by the final service user. Run `npm ci --omit=dev --ignore-scripts --no-audit --no-fund`, `npm run check`, `npm test`, and `doctor` as that user.
+
+After checks pass, inspect outstanding work, gracefully stop affected consumers and the aggregate, take SQLite-consistent backups, and preserve existing unit definitions. Update effective systemd commands to the new release, reload definitions, start services, and verify authenticated catalogs, gateways, and original subscriptions. Inspect both `ExecStart` and `DropInPaths` when overrides exist. Keep omitted channels inactive and preserve the existing official Tunnel instance/profile. Normal systemd operation uses signals rather than the foreground supervisor's stdin switch.
+
+Keep the running checkout pinned to its SHA; later fetches prepare another release directory. Roll back to the previous compatible code/dependencies and preserved service definitions while retaining current databases, original storage keys, sent outcomes, and uncertain state without automatic resend.
 
 Before downgrading to a version without media replies, check for pending, processing or uncertain media jobs. Preserve the current version or stop for review while those jobs exist; do not delete the queue, rewrite outcomes or resend an encoded media plan as text.
 

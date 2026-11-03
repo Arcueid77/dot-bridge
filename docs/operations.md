@@ -112,15 +112,43 @@ journalctl -u dot-bridge-lark.service -u dot-bridge-qq.service -u dot-bridge-rou
 
 ## 更新与回滚
 
-整套版本由总仓库固定。更新前先停止服务、保存当前代码版本和 `node_modules`，按需要做一致性数据库备份，再切换到已核验的总仓库版本并运行：
+运行主机可以直接从 GitHub 总仓库拉取源码。总仓库已包含固定版本的 core 和各渠道构件；配置、密钥、数据库及订阅状态继续放在仓库外。
+
+推荐使用一个 Git 缓存仓库，并为每个已审核的完整 SHA 创建独立发布目录。部署管理员在首次设置缓存时执行：
+
+```bash
+git init --bare --initial-branch=main /opt/dot-bridge/repository.git
+git --git-dir=/opt/dot-bridge/repository.git remote add origin https://github.com/Arcueid77/dot-bridge.git
+git --git-dir=/opt/dot-bridge/repository.git config remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+git --git-dir=/opt/dot-bridge/repository.git config --add remote.origin.fetch '+refs/heads/main:refs/heads/main'
+```
+
+每次更新将 `BRIDGE_REV` 换成已通过检查的完整提交 SHA；下面以一个固定版本为例。目标发布目录必须尚不存在：
+
+```bash
+BRIDGE_REV=0d12db9b1eeda4ce82dd72df548717acdf9551e4
+BRIDGE_GIT_CACHE=/opt/dot-bridge/repository.git
+BRIDGE_RELEASE=/opt/dot-bridge/releases/git-$BRIDGE_REV
+git --git-dir="$BRIDGE_GIT_CACHE" -c http.sslVerify=true fetch --depth=1 --no-tags origin main
+git --git-dir="$BRIDGE_GIT_CACHE" -c http.sslVerify=true fetch --depth=1 --no-tags origin "$BRIDGE_REV"
+git --git-dir="$BRIDGE_GIT_CACHE" update-ref "refs/releases/$BRIDGE_REV" "$BRIDGE_REV"
+git --git-dir="$BRIDGE_GIT_CACHE" worktree add --detach "$BRIDGE_RELEASE" "$BRIDGE_REV"
+```
+
+在新发布目录以最终服务用户运行下列安装和检查命令。安装期间仅为该新目录及专用 npm 缓存提供必要写权限；安装完成后由部署管理员将源码和 `node_modules` 设为运行用户只读。私有数据目录继续由最终服务用户持有：
 
 ```bash
 npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+npm run check
+npm test
 node bin/dotbridge.js doctor --config /var/lib/dot-bridge/bridge.json
-sudo node bin/dotbridge.js service start --config /var/lib/dot-bridge/bridge.json --confirm-live
 ```
 
-凭据和数据继续放在仓库外。回滚代码时使用上一套代码与依赖，并先检查数据结构兼容性；不要用旧数据库覆盖升级后新收到的消息。已发送及 `uncertain` 的任务保持原状态，不自动重发。更换安装路径后需要重新生成并核对 systemd 中的绝对路径。
+检查通过后，核对在途工作，优雅停止本次切换涉及的消费者和聚合器，用 SQLite backup API 保存一致性快照，并备份现有服务定义。将生效的 systemd 启动路径更新到新发布目录，执行 `daemon-reload` 后启动并核对本地认证、目录、网关与原订阅。
+
+已有 drop-in 时同时查看 `systemctl show <服务名> -p ExecStart -p DropInPaths`，确认最终生效路径。未选用渠道保持停用；官方 Tunnel 沿用原实例及配置。普通 systemd 服务继续使用信号停止，不设置前台监督器的 stdin 开关。
+
+生产目录固定在所选 SHA；后续 Git 拉取用于准备下一套发布目录。旧发布目录、原服务定义和当前数据保留供回滚。回滚代码时使用上一套兼容代码与依赖，保留升级后新收到的数据、已发送状态及 `uncertain`，不自动重发。
 
 退回尚不支持媒体回复的旧版本前，先确认没有等待发送、正在处理或结果不明的媒体任务。
 有这类任务时保留当前版本或停机等待处理，不删除队列、改状态或把媒体计划改成文字重发。
