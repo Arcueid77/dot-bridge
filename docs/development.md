@@ -144,3 +144,10 @@ All eight component packages pin the same reviewed core 0.10.0 artifact. The
 distribution retains the nine current component archives; historical releases
 remain reproducible from their exact Git revisions. Runtime data and rollback
 state stay outside these source artifacts.
+
+
+## 0.8.2：最终回复状态兼容修复
+
+core 0.11.1 将最终发送状态与处理提示租约分开。读取消息或开始处理后，尚未排队的最终回复仍返回 `none`；真正进入最终发件写入才返回 `processing`，原生写入结果不明仍保留 `uncertain`。新增合成回归复现旧行为阻止唯一回复的问题，并验证修复后只发送一次。历史调用明细未取得，旧消息未回复的确切原因仍待核对。
+
+Core 0.11.1 separates final delivery from the processing-feedback lease. An unqueued final reply remains `none` while typing/processing feedback is active; an actual final outbox write reports `processing`, and an ambiguous native write remains `uncertain`. The regression reproduces suppression of the only final answer and verifies one send after the fix. Historical execution details were unavailable; the exact stop reason of the old message remains unverified.
