@@ -2,9 +2,9 @@
 
 [中文](im-roadmap.md)
 
-Proposed plan based on unified distribution 0.8.0, dated 2026-11-03. Advance by acceptance gates. Implementation and release evidence belong in [development notes](development.md).
+Plan baseline: distribution 0.8.2 / core 0.11.1, dated 2026-11-05. Advance by acceptance gates. Implementation and release evidence belong in [development notes](development.md).
 
-2026-11-04 progress: shared feedback, recent context, document excerpts, owner IM maintenance, and opt-in Telegram/Discord groups and topics are implemented in pinned component packages. The five existing channels are upgraded; original-dot tool refresh, actual interaction acceptance, and new-group activation remain separate steps. Pause/reset/approval controls await a verified official interface. See [interaction configuration](new-channels.en.md#shared-interaction-and-group-rules).
+2026-11-05 progress: five existing task instructions and the tool catalog are updated. Lark/Discord/Telegram text, context and progressive replies passed acceptance; Discord/Telegram restart preserved state. Current QQ/Weixin interaction tests await owner messages, while DingTalk/WeCom/LINE await account onboarding. Group rules are implemented; new-group activation and real media return have separate acceptance. Version 0.8.2 fixes processing feedback being confused with final delivery. Hosted pause/reset/approval remain platform UI operations. See [interaction configuration](new-channels.en.md#shared-interaction-and-group-rules).
 
 ## What 1.0 delivers
 

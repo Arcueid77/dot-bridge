@@ -1,7 +1,5 @@
 # DotBridge
 
-QQ now implements opt-in owner-only proactive text and saved reminders. Verify the actual application's platform eligibility and quota before enabling. Explicit rejection pauses work as `rejected`; ambiguous results remain `uncertain`. See the [reminder guide](docs/scheduled-messages.en.md).
-
 Connect your chat apps to your existing ChatGPT dot. Send a message from your familiar chat app and let the same dot handle it and reply.
 
 This repository is the unified installation and operations entry point. Select Lark, QQ, DingTalk, WeCom, Weixin iLink, Discord, Telegram or LINE as needed. Each channel remains maintained in its own repository.
@@ -38,15 +36,17 @@ All channels default to the owner's private conversation. Lark, Telegram and Dis
 
 New groups stay disabled. Protected per-channel policy controls feedback, genuine progressive updates and long-text parts. See [shared interactions](docs/new-channels.en.md#shared-interaction-and-group-rules) for configuration and hosted-dot control boundaries.
 
-See [channel setup and limits](docs/new-channels.en.md) for formats and size limits. Audio understanding depends on the dot host. A transcript is a reference, not proof of native audio understanding. Optional local Whisper requires a protected Linux runtime.
+Owner DMs support `/status`, `/queue`, `/subscription`, and `/cancel [reference]` for local bridge work. The shared runtime separates final delivery status from the typing lease: beginning work still needs one final reply. Hosted-dot pause/reset/approval remain in the original platform.
+
+See [channel setup and limits](docs/new-channels.en.md) for formats and size limits. Audio understanding depends on the dot host. Tools keep original audio and reference transcripts distinct. Optional local Whisper requires a protected Linux runtime.
 
 Lark media requires the corresponding interaction policy and app permissions; follow the component's configuration guide.
 
-DingTalk, WeCom, Weixin, Discord and Telegram deliver an answer as a complete text file when it exceeds the platform's single-message text limit. LINE splits long text within one reply request; media hosting remains disabled until configured, and generic file messages are not available. Audio replies use existing recordings, without automatic speech synthesis.
+DingTalk, WeCom, Weixin, Discord and Telegram default to a complete text file above native single-message limits. Telegram/Discord can opt into durably acknowledged native parts. LINE splits long text within one reply request; media hosting remains disabled until configured, and generic file messages are not available. Audio replies use existing recordings, without automatic speech synthesis.
 
 ## Install
 
-Use **Node.js >=24.15 and <25**. Foreground operation supports Windows and Linux; persistent services use Linux/systemd.
+Use **Node.js >=24.15 and <25** on a continuously available computer or VPS. Windows supports foreground operation and Linux provides systemd. A deployment computer can disconnect while the remote service continues. macOS is unverified; trials and feedback are welcome.
 
 Windows also needs an existing Python 3 interpreter for private-file ACL checks. Set `DOT_BRIDGE_PYTHON` to its absolute path as described in [operations](docs/operations.en.md#windows-private-files).
 
@@ -93,12 +93,25 @@ Open a local dashboard for channel status, owner pairing guidance, original-dot 
 node bin/dotbridge.js ui --config /var/lib/dot-bridge/bridge.json
 ```
 
-Open the loopback URL printed by the command. Use `ui --demo` for a synthetic, account-free preview. The dashboard does not accept credentials, start another consumer, create subscriptions, or execute a target release. Configuration saves retain a private backup and take effect after an administrator reviews and restarts services. See the [management guide](docs/management.md).
+Open the loopback URL printed by the command. Use `ui --demo` for a synthetic, account-free preview. The dashboard does not accept credentials, start another consumer, create subscriptions, or execute a target release. Configuration saves retain a private backup and take effect after an administrator reviews and restarts services. See the [management guide](docs/management.en.md).
 
 ## Independent components
 
-- [dot-lark-bridge](https://github.com/Arcueid77/dot-lark-bridge): Feishu/Lark.
-- [dot-qq-bridge](https://github.com/Arcueid77/dot-qq-bridge): QQ.
-- [dot-bridge-core](https://github.com/Arcueid77/dot-bridge-core): shared transport, MCP routing, private files and transcription.
+| Repository | Responsibility |
+| --- | --- |
+| This distribution | Installation, selected channels, services and pinned composition |
+| [dot-bridge-core](https://github.com/Arcueid77/dot-bridge-core) | Shared transport, private storage, protocol/router and processing |
+| [dot-lark-bridge](https://github.com/Arcueid77/dot-lark-bridge) | Feishu/Lark |
+| [dot-qq-bridge](https://github.com/Arcueid77/dot-qq-bridge) | Official QQ bot |
+| [dot-dingtalk-bridge](https://github.com/Arcueid77/dot-dingtalk-bridge) | DingTalk |
+| [dot-wecom-bridge](https://github.com/Arcueid77/dot-wecom-bridge) | WeCom smart bot |
+| [dot-weixin-bridge](https://github.com/Arcueid77/dot-weixin-bridge) | Weixin iLink |
+| [dot-discord-bridge](https://github.com/Arcueid77/dot-discord-bridge) | Discord |
+| [dot-telegram-bridge](https://github.com/Arcueid77/dot-telegram-bridge) | Telegram |
+| [dot-line-bridge](https://github.com/Arcueid77/dot-line-bridge) | LINE Messaging API |
 
-New IM implementations get independent repositories and are then added to this distribution. The `channels` command lists what can actually start. Packaging and testing details are in [development](docs/development.md).
+The `channels` command lists installed adapters. The [roadmap](docs/im-roadmap.en.md) separates implementation, account onboarding and release acceptance. [Development](docs/development.md) covers source versions and packaging.
+
+## Scheduled messages
+
+Explicit `DOT_BRIDGE_OUTBOUND=owner-text` enables owner-only text and fixed reminders per channel. Dynamic reports are generated by the original dot's saved tasks. QQ also implements this path; verify the account's platform eligibility and quota before activation. Explicit rejection pauses the intent as `rejected`; ambiguous results remain `uncertain`. See [scheduled messages](docs/scheduled-messages.en.md).

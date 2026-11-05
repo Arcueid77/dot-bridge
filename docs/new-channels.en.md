@@ -120,3 +120,14 @@ Lark/QQ retain their established interaction policies. Explicit `DOT_BRIDGE_OWNE
 Keep the original keys, bindings, subscriptions, queues, deduplication and uncertain outcomes. Use a consistent SQLite backup and the retained previous release. Drain progressive native replies before downgrading code that cannot understand their references. Never replace current state with an older pre-message database. A same-host lock does not fence a second machine.
 
 Records are logically cleared after seven days. SQLite pages, WAL, backups and host journals have their own retention; logical clearing is not physical erasure. Application logs use fixed startup/status information and suppress raw provider messages, identities, credentials and complete callback URLs.
+
+
+### Delivery state and routed diagnostics
+
+For shared Weixin/Telegram/Discord adapters, `get_<channel>_reply_status` reports final delivery. Reading/beginning processing changes the feedback lease; before a final answer is queued its delivery state remains `none`. `pending` means queued, `processing` a final write, and `sent` platform acknowledgement. The current begin/append flow still completes one final answer. Lark keeps delta appends; QQ/Telegram/Discord submit cumulative generated text.
+
+Behind the aggregate Tunnel use `check_<channel>_readiness`; direct backends expose `check_<channel>_setup`. QQ retains `check_bridge_setup` and Lark `check_lark_readiness`. CLI status handles that mapping.
+
+The table lists component built-in ports. A multi-channel installation may explicitly use 8801–8806 for DingTalk, WeCom, Weixin, Discord, Telegram and LINE, keeping existing Tunnel-admin ports free. Choose available ports in actual configuration.
+
+Policy defaults are feedback off, maintenance on for these three adapters, a 60-second typing lease (10–300), history of 20 messages (1–50) and 12000 characters (1000–20000), and empty groups. Weixin uses typing; set reaction/streaming false and keep groups empty. Durable `chunks` applies to Telegram/Discord; Weixin, DingTalk and WeCom retain complete-file delivery.

@@ -1,153 +1,68 @@
-# Development and release composition
+# Development and verification / 开发与验证
 
-## QQ owner notifications in 0.7.0
+## Responsibilities / 仓库分工
 
-This composition pins QQ 0.7.0 and one shared core 0.9.0 across every component.
-QQ exposes owner-only proactive text and saved once/daily/weekly reminders,
-disabled by default. It uses the original private database and storage key,
-independently of inbound subscriptions. Explicit provider rejection persists as
-`rejected` and pauses recurrence; unknown outcomes remain `uncertain` without
-automatic retry. Current application eligibility and quota still need verification
-because the official SDK and platform suspension notice give different guidance.
+The distribution owns installation, selected-channel composition, lifecycle and service rendering. Providers own their platform protocols. Canonical transport, encrypted state, private files, media processing and registered-adapter routing live in `dot-bridge-core`.
 
-Source tests cover restart persistence, owner binding, duplicate intents,
-permission/quota refusal, malformed ACKs, token-time revocation, and the expanded
-catalog/list byte budgets. The actual QQ/Lark sibling catalog contains 32 tools.
-The distribution tests the installed QQ adapter and outbox from its immutable
-packages, including rejection projection. Local Windows validation passed QQ 264,
-core 253 (5 Linux-only skips), Lark 274 (16 skips), the six other providers 172,
-and distribution 33 (1 Linux-only skip). These are synthetic checks; production
-configuration, account qualification and real QQ delivery were not exercised.
+总仓库维护安装、渠道组合与运行入口，独立渠道维护平台协议，共享实现仅在 core。单飞书部署选择 `lark`，所需固定组件包随总仓库安装。
 
-Standalone QQ/Lark CI also runs Linux and Windows. The hosted Windows bootstrap
-temporarily makes its test process create files owned by the current user,
-matching the final service-user model, and restores the prior token default
-owner afterward. Production ownership/DACL checks are unchanged. These CI files
-are excluded from component packages; advancing their source provenance keeps
-the previously reviewed component archives byte-identical.
+## Version baseline / 版本基线
 
-The distribution consumes independent component releases. It owns the CLI,
-selected-channel composition, operator configuration, foreground lifecycle,
-systemd rendering, and compatibility checks. Provider behavior remains in the IM
-repositories; transport and security primitives remain in core.
+The 2026-11-05 functional baseline is distribution 0.8.2 with core 0.11.1. `components.lock.json` records source revisions, versions and artifact SHA-256 values. Private receipts record the actual running revision separately from later source-doc commits.
 
-## Management and media composition in 0.4.0
+2026-11-05 功能基线为总包 0.8.2 / core 0.11.1。运行版本、源码、依赖包和现场验收分层记录。文档提交沿用已审核发行包，下一次发布再生成包含新文档的固定包。
 
-The loopback-only management entry serves the operator interface and fixed,
-redacted APIs. It does not receive credentials, create host subscriptions, run
-pairing, start consumers, or execute code from a selected release. Configuration
-writes change only channel selection, require a matching revision and explicit
-confirmation, and retain a private backup. Upgrade checks verify installed local
-artifacts and produce an administrator runbook; they do not claim cutover.
+Core 0.11.1 separates processing-feedback leases from final delivery. Reading/beginning work leaves an unqueued final reply at `none`; only a final write reports `processing`. Unknown native outcomes remain `uncertain`. The regression fails on old behavior and verifies one answer with the fix. Historical call details for the earlier unanswered message were unavailable.
 
-Connection diagnosis distinguishes loaded callback settings from merely edited
-files, preserves the different setting names used by established and new
-providers, and never treats an intentional wait for subscription as a gateway
-failure. Complete outbound counts include retained stream and feedback work;
-an already displayed, idle feedback card is not outstanding work.
+0.11.1 修复处理提示与最终发送状态混用的问题。回归用例复现旧行为会跳过唯一回答，并验证修复后只发送一次；旧现场消息的完整调用明细未取得。
 
-The canonical MCP media budget is 5 MiB. Tests serialize the official Tunnel
-wire envelopes, including Go JSON escaping and duplicate rich-result metadata,
-against its default 10 MiB limit. A conservative additional Base64 wrapper is
-also checked. Previously queued oversized media remain intact rather than being
-sent, dropped, or changed to an unknown-outcome state during inspection.
+## Packaging / 固定包构建
 
-New providers preserve a single durable final reply. Long text becomes a file
-where necessary; LINE keeps its existing single-call text chunks. Weixin adds
-validated native SILK voice replies. LINE media uses a separately approved,
-short-lived HTTPS publisher with an independent signing key, bounded memory,
-and explicit opt-in. Reverse-proxy examples disable body/response disk buffering
-and URI-bearing logs. Neither temporary URL expiry nor buffer clearing is a
-claim of physical erasure. This release does not add text-to-speech synthesis.
+1. Commit reviewed clean core source and build a versioned artifact.
+2. Update every provider's artifact, `vendor/core-release.json` and lockfile to that same core version/SHA/hash.
+3. Commit and validate providers, then regenerate the distribution:
 
-Windows browser automation was stopped because its current browser URL could
-not be identified confidently. HTTP/API tests do not replace visual acceptance.
-Unused tracked older core archives remain present; dependency locks and the npm
-override select exactly one reviewed core at runtime.
-
-## Component interface
-
-Each IM package exposes `adapter`, `config`, `runtime/live`,
-`runtime/readiness`, and `package.json`. The distribution statically registers
-installed adapters; neither remote input nor environment values select module
-paths or executable programs. `components.lock.json` records canonical source
-repositories, revisions and artifact digests.
-
-The private registry packages are not yet published. Reviewed tarballs are
-included in `vendor/`. The npm override pins one shared core release across all
-components. A clean checkout requires only this repository and `npm ci`.
-
-## Rebuild artifacts
-
-Use Node >=24.15 and <25. Commit component changes first; the packer refuses dirty
-source checkouts. It archives the committed tree into a temporary directory,
-packs with lifecycle scripts disabled, checks the channel core references, and
-updates the component manifest. Source checkout line endings cannot affect the
-release archive.
-
-```bash
-npm run vendor -- --sources ..
-npm install --omit=dev --ignore-scripts --no-audit --no-fund
+```sh
+npm run vendor -- --sources /absolute/path/to/sibling-source-checkouts
+npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 npm run check
 npm test
 ```
 
-All referenced source commits must be reachable in their canonical public
-repositories before pushing a public distribution release. Publish dependency
-branches as appropriate; do not silently merge unrelated main branches.
+4. Review/commit the composition and verify exact remote SHA and CI.
 
-## Checks
+脚本仅打包干净、已提交的源码。先固定 core，再统一供应各渠道及路由器；私有状态留在仓库外。文档修改保持现有压缩包不变，通过下一次正常发布进入新版组件包。
 
-`check` validates syntax, artifact SHA-256, npm SHA-512 integrity, installed
-versions and consistent core provenance. Tests exercise the actual packaged
-Lark/QQ readiness services and aggregate without sibling source paths, plus
-single-channel omission, explicit live gates, independent credentials, hostile
-dotenv controls, occupied ports, child failure cleanup and systemd rendering.
+## Checks / 检查范围
 
-Synthetic readiness uses temporary private files and disabled provider
-transports. It creates no real IM consumer, Tunnel client or dot subscription.
-Linux additionally runs `systemd-analyze verify` when available. Real pairing,
-provider delivery and production cutover are separate operator activities.
+Use Node.js >=24.15 and <25. Windows ACL tests need installed Python selected by `DOT_BRIDGE_PYTHON`; legacy TLS tests also use OpenSSL. Core, eight providers and the distribution have Windows/Linux CI.
 
-## Runtime boundaries
+Tests use synthetic credentials/callbacks and provider-disabled readiness services. Installed multi-channel fixtures start all eight actual packaged readiness backends, checking catalogs, routing and attachment contracts. Core covers callbacks, encrypted queues, owner binding, context isolation, feedback, progressive/partial sends, expiry, restart and uncertain outcomes.
 
-- The manifest controls enabled channels. Disabled channels have no credential
-  reads or child processes, although their reviewed code can be installed.
-- Router environment accepts only the aggregate's settings; upstream ports and
-  service-key references are derived from selected backend environments.
-- Environment files use core's private-file checks. Loader injection variables,
-  duplicate fields and inherited provider credentials are rejected or omitted.
-- `run` starts supervised children, probes authenticated loopback catalogs and
-  drains in reverse order on Ctrl+C, startup failure or child failure. The stdin
-  control pipe is enabled only for this explicit foreground supervisor.
-- systemd launches the same package entrypoints directly and uses ordinary
-  signals. It does not enable the finite-launcher stdin supervision switch.
-- The official Tunnel remains independently configured; the distribution never
-  fabricates an owner identity, callback URL or runtime credential.
+普通测试使用合成私有文件、注入网络和禁用平台的 readiness 入口。分别记录 OS、Node、通过、失败、跳过及未运行。文档检查验证本地链接、语言导航和 JSON 策略；文件清单变动还检查包内文档覆盖。
 
-The six new providers use core 0.7.x encrypted channel runtime. Platform protocol fixtures live in each independent repository. `multi-channel.test.js` starts all eight actual packaged readiness backends and checks their authenticated catalogs without sibling source checkouts. It also requires the source-attachment reply contract in every installed live adapter. `channel-runtime.test.js` in core exercises signed callback challenge, owner binding, encrypted state, uncertain sends, restart persistence, subscriptions and the actual router. Media regression includes authorization revocation during upload/read, retained encrypted capacity, bounded UTF-8 rich results and no replay after uncertain sends. Pairing uses expiring nonce fixtures and real private-file permission tests. Optional SILK runs in bounded workers using codec dependencies pinned by the individual providers.
+## Maintainer acceptance / 维护者验收记录
 
-Source attachment replies use the existing encrypted media outbox format. The generic runtime hashes the normalized reference request before reading bytes, so an identical retry returns persisted state without another download. QQ retains its source-reference digest inside the encrypted media plan when upload bytes are replaced by the durable file receipt. No SQLite schema change is needed. Provider format limits and authorization gates still run before queue/upload/final send. Passive file excerpts share a bounded UTF-8/UTF-16 decoder; no new document subprocess or external service is installed.
+Dated record: 2026-11-05.
 
-Platform priorities are documented in `im-roadmap.md`. cc-connect is a research
-reference for platform transports; its model/agent runtime and platform code are
-not vendored by this repository.
+| Scope | Recorded result / 记录结果 |
+| --- | --- |
+| Source CI | Core + eight providers + distribution passed Windows/Linux workflows |
+| VPS package | 36 Linux distribution tests passed; credentials, policies and original subscriptions retained |
+| Lark | Owner status command, normal reply and three generated card chunks completed |
+| Discord | Four progress frames, reaction/typing cleanup, context and post-restart replies completed once |
+| Telegram | Three progress frames, bold/lists, native quote and post-restart reply completed once |
+| QQ / Weixin | Existing gateway/subscription retained; current interaction acceptance awaits owner messages |
+| DingTalk / WeCom / LINE | Source/CI available; account onboarding and real acceptance pending |
+| New groups | Telegram/Discord rules tested synthetically; no new groups activated in that deployment |
 
-## 0.8.0 owner-message package
+The five-channel composition exposed 85 tools/five events; catalog size follows selected adapters. Hosted pause/reset/approval remain platform operations. Real media return and new-group behavior were not rerun in that browser acceptance.
 
-Weixin now implements the shared owner-only proactive text and durable reminder
-contract without reading or reusing an inbound context token. Explicit platform
-refusals remain rejected; missing acknowledgements and transport failures remain
-uncertain. Actual account acceptance and visible receipt need live verification.
+现场记录保持脱敏，不放正文、身份、凭据或完整 callback。原 dot／平台负责真实续订；发送结果不明保持人工核对。私有迁移打包工具仍有历史双渠道范围，完整多渠道迁移另行验证。
 
-All eight component packages pin the same reviewed core 0.10.0 artifact. The
-distribution retains the nine current component archives; historical releases
-remain reproducible from their exact Git revisions. Runtime data and rollback
-state stay outside these source artifacts.
+## Deployment / 部署维护
 
+Stage an exact Git revision and dependency checks, settle work, back up databases consistently and switch selected adapters/router together. Keep MCP loopback and one official Tunnel target. Recovery preserves post-upgrade data, deduplication and delivery outcomes.
 
-## 0.8.2：最终回复状态兼容修复
-
-core 0.11.1 将最终发送状态与处理提示租约分开。读取消息或开始处理后，尚未排队的最终回复仍返回 `none`；真正进入最终发件写入才返回 `processing`，原生写入结果不明仍保留 `uncertain`。新增合成回归复现旧行为阻止唯一回复的问题，并验证修复后只发送一次。历史调用明细未取得，旧消息未回复的确切原因仍待核对。
-
-Core 0.11.1 separates final delivery from the processing-feedback lease. An unqueued final reply remains `none` while typing/processing feedback is active; an actual final outbox write reports `processing`, and an ambiguous native write remains `uncertain`. The regression reproduces suppression of the only final answer and verifies one send after the fix. Historical execution details were unavailable; the exact stop reason of the old message remains unverified.
+运行见[中文](operations.md)或 [English operations](operations.en.md)。主干使用 `main`，PR 用 Squash；源码、包检查、进程存活和真实消息验收分别记录。

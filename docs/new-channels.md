@@ -1,5 +1,7 @@
 # 接入更多聊天软件
 
+[English](new-channels.en.md)
+
 钉钉、企业微信、微信 iLink、Discord、Telegram 和 LINE 都有独立渠道组件，
 可由总入口按需启动。接收本人私聊，回复回到原会话；除文字外，dot 可以读取图片、音频和文件附件。
 企业微信收到语音时使用平台转写，没有可下载的原音频。LINE 默认回复文字，显式配置临时媒体下载入口后可回图片和语音。
@@ -33,7 +35,7 @@ node node_modules/dot-weixin-bridge/scripts/login.js --credentials-file /var/lib
 | `telegram` | [Telegram Bot](https://github.com/Arcueid77/dot-telegram-bridge) | 8794 | 4096 字符以内直接显示，长回答作为文本文件；已有 webhook 需要先协调停用 |
 | `line` | [LINE Messaging API](https://github.com/Arcueid77/dot-line-bridge) | 8795 | 需在约 55 秒内完成回复；每次最多 20000 字符 |
 
-以上五个渠道支持最多 20000 字符的回答。超过平台单条文字长度时，完整内容作为 `answer.txt` 发回，仍是这条原消息的一次最终回复，不静默截断或切成多次发送。LINE 的长文字在同一次回复请求中分段，总计最多 20000 字符。
+前五个渠道最多回复 20000 字符，默认超出原生单条上限时以完整 `answer.txt` 完成回复。Telegram／Discord 可在受保护策略中选择持久分段。LINE 在同一次回复请求中分段，总计最多 20000 字符。
 LINE 还需要公网 HTTPS webhook，由已有反向代理转发到 `127.0.0.1:8895/webhook`；
 详细配置见 LINE 仓库。这个入口与给 Tunnel 使用的 MCP 端口分开。
 
@@ -73,7 +75,7 @@ BRIDGE_MODE=tunnel
 TUNNEL_SERVICE_OPERATION=live
 TUNNEL_SERVICE_OWNER_ID=tunnel-owner:dot-bridge
 HOST=127.0.0.1
-PORT=8790
+PORT=8801
 TUNNEL_SERVICE_KEY_FILE=/var/lib/dot-bridge/private/dingtalk.service.key
 DINGTALK_CREDENTIALS_FILE=/var/lib/dot-bridge/private/dingtalk.credentials.json
 STORAGE_KEY_FILE=/var/lib/dot-bridge/private/dingtalk.storage.key
@@ -154,7 +156,7 @@ Telegram、Discord、微信 iLink 可在各自环境文件中设置 `DOT_BRIDGE_
 - 接收提示在消息落库后添加。原 dot 读取消息或调用 `begin_<渠道>_reply` 后才开始有限期的 typing；完成、失败、取消或到期后清理。微信使用官方 typing ticket，不显示不支持的表情或流式更新。
 - Telegram、Discord 可用 `append_<渠道>_reply` 提交真正生成的完整文本进度，序号从 1 连续增加，重复同一帧幂等；最后 `reply_to_<渠道>` 完成同一条原生消息。没有增量内容时直接给完整回答，不播放已完成答案。
 - `get_<渠道>_context` 读取当前消息之前、同一会话、话题和所配置发言人范围内的保留历史。引用及历史均作为数据处理。Telegram 的 Markdown 转为安全 HTML；Discord 使用原生 Markdown。
-- `long_text` 默认 `file`，超出单条上限以完整文件回复。选 `chunks` 时，分段计划和每段确认结果持久化。任一段结果不明就保留 `uncertain`，不自动重发之前的段落。
+- Telegram／Discord 的 `long_text` 默认 `file`，超限以完整文件回复；选 `chunks` 时，分段计划和每段确认结果持久化。微信、钉钉和企业微信保持完整文件策略。任一段结果不明就保留 `uncertain`，不自动重发之前的段落。
 - 文件可附带文本、PDF、DOCX、XLSX、PPTX 摘录。PDF／Office 使用受保护的 Linux Python、`pypdf`、`prlimit` 和 `DOT_BRIDGE_AUDIO_GUARD`；原件只经过有界管道。摘录明确标记截断。未配置转换环境时仍可读取原件和普通文本摘录。
 - 音频沿用共享的受保护转码、SILK 与可选本地 Whisper。原始音频和转写分别提供；语音回复使用已有音频。
 
@@ -185,3 +187,14 @@ Telegram 校验真实 mention entity、发给本 bot 的命令或对本 bot 的�
 飞书、QQ 保留原交互配置。若还要在 dot 订阅缺失／到期时接收本人管理命令，可在标准回调模式下显式设置 `DOT_BRIDGE_OWNER_MANAGEMENT=1`。这时普通私聊得到订阅状态提示，消息不会转交模型。默认保留原来的订阅连接门槛。
 
 `/cancel` 管理桥侧排队回复。原 dot 的暂停、会话重置和审批继续在[原平台控制界面](https://learn.chatgpt.com/docs/dots/controls)完成；当前能力状态明确报告 `hosted_dot_controls: false`，不调用未公开的控制接口。
+
+
+### 最终发送状态与平台入口
+
+共享渠道（微信 iLink、Telegram、Discord）的 `get_<渠道>_reply_status` 查询最终发送。原 dot 读取或开始处理时，提示租约会更新；尚未提交最终回答则仍为 `none`。`pending` 是最终回答排队，`processing` 是最终消息写入，`sent` 是平台确认；本次 begin/append 流程继续完成一次最终回复。飞书、QQ 沿用自身状态与流式接口；飞书 append 传新增文本，QQ／Telegram／Discord 传完整累计文本。
+
+在聚合器后的原 Tunnel 中，通用渠道的诊断名为 `check_<渠道>_readiness`；直接访问后端时是 `check_<渠道>_setup`。QQ 的公开诊断仍为 `check_bridge_setup`，飞书为 `check_lark_readiness`。CLI `status` 会处理映射。
+
+上表列组件内置端口。组合部署可显式选择 `8801`–`8806` 分别用于钉钉、企业微信、微信、Discord、Telegram、LINE，并避免与已有 Tunnel 管理端口冲突。以实际空闲端口和私有配置为准。
+
+交互字段的默认值：反馈关闭、管理命令对这三个适配器开启，typing 租约 60 秒（10–300），历史 20 条（1–50）和 12000 字符（1000–20000），新群为空。微信使用 typing，示例中的 reaction／streaming 可设为 false，`groups` 保持空数组。
