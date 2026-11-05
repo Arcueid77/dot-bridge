@@ -98,3 +98,7 @@ Keep the running checkout pinned to its SHA; later fetches prepare another relea
 Before downgrading to a version without media replies, check for pending, processing or uncertain media jobs. Preserve the current version or stop for review while those jobs exist; do not delete the queue, rewrite outcomes or resend an encoded media plan as text.
 
 Media and group capabilities follow channel policy and dot capabilities. Official QQ bots and personal-account OneBot/NapCat integrations are distinct; this distribution uses the official bot route.
+
+## Downgrading reminders and choices
+
+Before returning to core 0.11 or earlier, pause or finish weekday and interval schedules, settle accepted choices and in-progress uploads, then switch to the saved compatible code and service configuration. Preserve the current databases, storage keys and delivery outcomes. Old database snapshots omit messages received since that snapshot.

@@ -1,14 +1,21 @@
 const $=id=>document.getElementById(id);
-const titles={overview:'渠道总览',setup:'接入引导',settings:'运行设置',updates:'版本与升级'};
+const titles={overview:'渠道总览',setup:'接入引导',settings:'运行设置',updates:'版本与升级',reminders:'我的提醒'};
 const symbols={lark:'飞',qq:'QQ',dingtalk:'钉',wecom:'企',weixin:'微',discord:'D',telegram:'T',line:'L'};
 const english={lark:'FEISHU / LARK',qq:'QQ OFFICIAL BOT',dingtalk:'DINGTALK',wecom:'WECOM',weixin:'WEIXIN ILINK',discord:'DISCORD',telegram:'TELEGRAM',line:'LINE'};
 let session,snapshot,selectedRelease;
+let reminderOffset=0;
+let nextReminderOffset=null;
+let editingReminder=null;
+let reminderSendEnabled=false;
+let reminderIntent=crypto.randomUUID();
+const reminderStates={active:'等待下次提醒',pending:'等待发送',paused:'已暂停',sending:'正在发送',sent:'已发送',completed:'已结束',cancelled:'已取消',expired:'已错过',uncertain:'结果待核对',rejected:'平台拒绝'};
+const reminderReasons={provider_permission_denied:'平台权限不足',provider_quota_exhausted:'平台额度不足',provider_rejected:'平台明确拒绝',provider_result_unknown:'发送结果待人工核对',recovered_inflight:'重启前的发送结果待核对',missed:'服务恢复时已超过补发时间'};
 const node=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const replace=(element,children)=>element.replaceChildren(...children);
 function feedback(text,error=false){$('feedback').textContent=text;$('feedback').className='feedback'+(error?' error':'');}
-function view(id){for(const key of Object.keys(titles))$('view-'+key).classList.toggle('hidden',key!==id);for(const button of document.querySelectorAll('.nav')){button.classList.toggle('active',button.dataset.view===id);if(button.dataset.view===id)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}$('breadcrumb').textContent='工作台 / '+titles[id];if(id==='setup')renderSetup();if(id==='updates')void releases().catch(()=>feedback('发行目录暂时不可用，请核对启动参数。',true));}
+function view(id){for(const key of Object.keys(titles))$('view-'+key).classList.toggle('hidden',key!==id);for(const button of document.querySelectorAll('.nav')){button.classList.toggle('active',button.dataset.view===id);if(button.dataset.view===id)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}$('breadcrumb').textContent='工作台 / '+titles[id];if(id==='setup')renderSetup();if(id==='reminders')void loadReminders().catch(error=>feedback(error.message,true));if(id==='updates')void releases().catch(()=>feedback('发行目录暂时不可用，请核对启动参数。',true));}
 async function api(url,body){const response=await fetch(url,{method:body?'POST':'GET',cache:'no-store',headers:body?{'Content-Type':'application/json','X-DotBridge-Session':session}:{},...(body?{body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok)throw Error(result.message??'操作未完成，请刷新后检查。');return result;}
-async function busy(button,action){button.disabled=true;try{await action();}catch(error){feedback(error.message,true);}finally{button.disabled=false;}}
+async function busy(button,action){button.disabled=true;try{await action();}catch(error){feedback(error.message,true);}finally{button.disabled=button.id==='reminder-save'&&!reminderSendEnabled;}}
 function summaryCard(label,value,unit,icon){const card=node('div','summary-card'),text=node('div');text.append(node('p',null,label));const strong=node('strong',null,String(value));strong.append(node('small',null,unit));text.append(strong);card.append(text,node('span','summary-icon',icon));return card;}
 function renderState(value){
   snapshot=value;$('sidebar-version').textContent='DotBridge '+value.installation.version;$('current-version').textContent='v'+value.installation.version;
@@ -21,6 +28,7 @@ function renderState(value){
   replace($('channel-options'),value.channels.map(c=>{const label=node('label','option'),input=node('input');input.type='checkbox';input.value=c.id;input.checked=c.selected;input.disabled=value.demo||!value.configurationAvailable;label.append(input,node('span',null,c.name));return label;}));
   for(const id of ['check-config','save-config'])$(id).disabled=value.demo||!value.configurationAvailable;
   replace($('component-versions'),value.installation.components.map(c=>{const item=node('div','component-item');item.append(node('span',null,c.id==='core'?'共享核心':value.channels.find(x=>x.id===c.id)?.name??c.id),node('strong',null,c.version));return item;}));
+  renderReminderChannels(value);
   renderSetup();
 }
 function setupStep(number,title,children){const row=node('div','step'),content=node('div');content.append(node('h3',null,title),...children);row.append(node('span','step-number',String(number)),content);return row;}
@@ -39,7 +47,7 @@ function renderSetup(){
   const check=[node('span','badge '+channel.presentation.tone,channel.presentation.label),node('p',null,channel.presentation.detail),node('p',null,'订阅就绪后，从本人私聊发送两条不同消息，确认各回复一次。平台连接、服务存活和真实收发分别核对。')];
   if(channel.replyCapabilities?.longReplyMode==='file')check.push(node('p',null,'较长的回答会作为文本文件发回，保留完整内容。'));
   if(channel.replyCapabilities?.longReplyMode==='chunks')check.push(node('p',null,'较长的回答会在同一次回复中分段显示。'));
-  const reminders=node('details');reminders.append(node('summary',null,'让 dot 定时给我发消息'),node('p',null,'主动发送需管理员按渠道单独开启。固定文字提醒保存在服务器；动态内容由原 dot 保存定时任务。QQ 和微信 iLink 暂不开放独立主动推送。'),node('pre',null,guide.outboundPrompt));
+  const reminders=node('details');reminders.append(node('summary',null,'让 dot 定时给我发消息'),node('p',null,'主动发送需管理员按渠道单独开启。固定文字提醒保存在服务器；动态内容由原 dot 保存定时任务。每个渠道的可用情况可在“我的提醒”中查看。'),node('pre',null,guide.outboundPrompt));
   panel.append(setupStep(1,'准备平台应用',platform),setupStep(2,guide.binding===true?'本人绑定已存在':guide.binding===false?'在私密终端完成本人配对':'核对已有本人绑定',pair),setupStep(3,'连接原 dot 的事件订阅',subscribe),setupStep(4,'刷新状态并确认回复',check),reminders);replace($('setup-content'),[panel]);
 }
 async function refresh(){renderState(await api('/api/state'));}
@@ -62,3 +70,117 @@ $('confirm-dialog').addEventListener('close',()=>{if($('confirm-dialog').returnV
 $('check-release').addEventListener('click',()=>void busy($('check-release'),async()=>renderRelease(await api('/api/check-release',{release:$('release-choice').value}))));
 $('download-plan').addEventListener('click',()=>void busy($('download-plan'),async()=>{const response=await fetch('/api/upgrade-plan',{method:'POST',headers:{'Content-Type':'application/json','X-DotBridge-Session':session},body:JSON.stringify({release:selectedRelease})});if(!response.ok){const result=await response.json();throw Error(result.message??'操作单生成失败。');}const blob=await response.blob(),url=URL.createObjectURL(blob),link=node('a');link.href=url;link.download='dotbridge-upgrade-plan.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);feedback('操作单已生成。请由管理员按实际主机情况完成备份和切换。');}));
 try{session=(await api('/api/session')).token;await refresh();}catch{feedback('管理页面暂时无法读取状态。请确认本机管理进程仍在运行，然后刷新页面。',true);}
+
+
+function renderReminderChannels(value){
+  const previous=$('reminder-channel').value;
+  replace($('reminder-channel'),value.channels.filter(channel=>channel.selected).map(channel=>{
+    const option=node('option',null,channel.name);option.value=channel.id;return option;
+  }));
+  if([...$('reminder-channel').options].some(option=>option.value===previous))$('reminder-channel').value=previous;
+  $('reminder-timezone').value ||= Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+function reminderTime(value,timezone){
+  try{return new Intl.DateTimeFormat('zh-CN',{timeZone:timezone,dateStyle:'medium',timeStyle:'short'}).format(new Date(value));}
+  catch{return value;}
+}
+function reminderLocalInput(value,timezone){
+  const values=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)).filter(part=>part.type!=='literal').map(part=>[part.type,part.value]));
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+}
+function updateReminderRepeat(){
+  const repeat=$('reminder-repeat').value;
+  $('reminder-interval-label').classList.toggle('hidden',repeat!=='interval');
+  $('reminder-until-label').classList.toggle('hidden',repeat==='once');
+  $('reminder-until').required=repeat!=='once';
+}
+function resetReminderForm(){
+  editingReminder=null;
+  reminderIntent=crypto.randomUUID();
+  $('reminder-form').reset();
+  $('reminder-timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  $('reminder-form-title').textContent='新建提醒';
+  $('reminder-paused-label').classList.remove('hidden');
+  updateReminderRepeat();
+}
+function editReminder(reminder){
+  editingReminder=reminder;
+  $('reminder-form-title').textContent=reminder.status==='paused'?'编辑已暂停的提醒':'编辑提醒';
+  $('reminder-text').value=reminder.text;
+  $('reminder-timezone').value=reminder.timezone;
+  $('reminder-time').value=reminderLocalInput(reminder.send_at,reminder.timezone);
+  $('reminder-repeat').value=reminder.repeat;
+  $('reminder-until').value=reminder.until?reminderLocalInput(reminder.until,reminder.timezone):'';
+  $('reminder-interval').value=reminder.interval_minutes??60;
+  $('reminder-paused-label').classList.add('hidden');
+  updateReminderRepeat();
+  $('reminder-text').focus();
+}
+async function reminderAction(reminder,action){
+  if(action==='cancel'&&!window.confirm('取消这条提醒及其后续发送？已开始的发送会保留原状态。'))return;
+  await api('/api/reminder-action',{channel:$('reminder-channel').value,outbound_id:reminder.outbound_id,expected_revision:reminder.revision,action,confirm:true});
+  feedback(action==='pause'?'提醒已暂停。':action==='resume'?'提醒已恢复。':'提醒已取消。');
+  await loadReminders();
+}
+async function reminderHistory(reminder){
+  const result=await api('/api/reminder-history',{channel:$('reminder-channel').value,outbound_id:reminder.outbound_id});
+  const panel=$('reminder-history');panel.classList.remove('hidden');
+  replace(panel,[node('h2',null,'最近发送记录')]);
+  if(!result.attempts.length)panel.append(node('p','muted','这条提醒尚无发送记录。'));
+  for(const attempt of result.attempts)panel.append(node('p',null,reminderTime(attempt.scheduled_at,reminder.timezone)+' · '+(reminderStates[attempt.status]??attempt.status)+(reminderReasons[attempt.reason]?' · '+reminderReasons[attempt.reason]:'')));
+}
+async function loadReminders(){
+  if(!snapshot)return;
+  const channel=$('reminder-channel').value;
+  if(snapshot.demo||snapshot.mode!=='live'||!channel){
+    reminderSendEnabled=false;
+    $('reminder-availability').textContent=snapshot.demo?'演示页面仅展示操作入口。':snapshot.mode!=='live'?'当前为预检模式，完成真实接入后可管理提醒。':'请先接入一个渠道。';
+    $('reminder-save').disabled=true;
+    return;
+  }
+  const result=await api('/api/reminders',{channel,offset:reminderOffset,include_finished:$('reminder-finished').checked});
+  if(channel!==$('reminder-channel').value)return;
+  reminderSendEnabled=result.outbound.enabled===true;
+  $('reminder-save').disabled=!reminderSendEnabled;
+  $('reminder-availability').textContent=reminderSendEnabled?'发送到此渠道已绑定的本人私聊。重复提醒按所选时区执行。':'此渠道的主动发送尚未启用。已有提醒仍可查看、暂停或取消。';
+  nextReminderOffset=result.next_offset??null;
+  $('reminder-previous').disabled=reminderOffset===0;
+  $('reminder-next').disabled=nextReminderOffset===null;
+  const cards=result.messages.map(reminder=>{
+    const card=node('article','panel reminder-card');
+    card.append(node('strong',null,reminderStates[reminder.status]??reminder.status),node('p','reminder-content',reminder.text||'正文已按保留规则清理'),node('p','muted','计划时间 '+reminderTime(reminder.send_at,reminder.timezone)+' · '+reminder.timezone));
+    const repeats={once:'仅一次',daily:'每天',weekly:'每周',weekdays:'周一至周五',interval:'每 '+reminder.interval_minutes+' 分钟'};
+    card.append(node('p','muted',repeats[reminder.repeat]+(reminder.until?' · 结束于 '+reminderTime(reminder.until,reminder.timezone):'')));
+    if(reminderReasons[reminder.reason])card.append(node('p','help',reminderReasons[reminder.reason]));
+    const actions=node('div','settings-actions');
+    const button=(text,action)=>{const control=node('button','button secondary',text);control.type='button';control.addEventListener('click',()=>busy(control,action));actions.append(control);};
+    if(['active','paused'].includes(reminder.status)&&reminderSendEnabled)button('编辑',()=>editReminder(reminder));
+    if(['active','pending'].includes(reminder.status))button('暂停',()=>reminderAction(reminder,'pause'));
+    if(reminder.status==='paused'&&reminderSendEnabled)button('恢复',()=>reminderAction(reminder,'resume'));
+    if(['active','pending','paused','uncertain','rejected'].includes(reminder.status))button('取消',()=>reminderAction(reminder,'cancel'));
+    button('发送记录',()=>reminderHistory(reminder));
+    card.append(actions);return card;
+  });
+  replace($('reminder-list'),cards.length?cards:[node('p','panel muted','当前没有此类提醒。')]);
+}
+
+$('reminder-repeat').addEventListener('change',updateReminderRepeat);
+$('reminder-reset').addEventListener('click',resetReminderForm);
+$('reminder-refresh').addEventListener('click',()=>busy($('reminder-refresh'),loadReminders));
+for(const id of ['reminder-channel','reminder-finished'])$(id).addEventListener('change',()=>{reminderOffset=0;resetReminderForm();void loadReminders().catch(error=>feedback(error.message,true));});
+$('reminder-previous').addEventListener('click',()=>{reminderOffset=Math.max(0,reminderOffset-20);void loadReminders().catch(error=>feedback(error.message,true));});
+$('reminder-next').addEventListener('click',()=>{if(nextReminderOffset!==null){reminderOffset=nextReminderOffset;void loadReminders().catch(error=>feedback(error.message,true));}});
+$('reminder-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  void busy($('reminder-save'),async()=>{
+    const repeat=$('reminder-repeat').value;
+    const body={channel:$('reminder-channel').value,text:$('reminder-text').value,local_time:$('reminder-time').value,timezone:$('reminder-timezone').value,repeat,until_local:repeat==='once'?null:$('reminder-until').value,confirm:true};
+    if(repeat==='interval')body.interval_minutes=Number($('reminder-interval').value);
+    if(editingReminder){body.outbound_id=editingReminder.outbound_id;body.expected_revision=editingReminder.revision;}
+    else{body.idempotency_key=reminderIntent;body.paused=$('reminder-paused').checked;}
+    const result=await api('/api/reminder-save',body);
+    feedback(result.status==='paused'?'提醒已保存为暂停。':'提醒已保存，计划时间 '+reminderTime(result.send_at,result.timezone)+'。');
+    resetReminderForm();await loadReminders();
+  });
+});

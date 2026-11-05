@@ -61,6 +61,38 @@ The five-channel composition exposed 85 tools/five events; catalog size follows 
 
 现场记录保持脱敏，不放正文、身份、凭据或完整 callback。原 dot／平台负责真实续订；发送结果不明保持人工核对。私有迁移打包工具仍有历史双渠道范围，完整多渠道迁移另行验证。
 
+## P1 interaction batch / P1 交互批次
+
+The 0.9.0 distribution consumes core 0.12.0 and the exact component revisions in
+`components.lock.json`. Independent providers retain platform protocol ownership.
+
+- Native choices use verified prompt receipts and actor/chat/topic binding on
+  Lark, Telegram and Discord. Durable selection precedes callback acknowledgement.
+  Other channels use numbered text choices. Reminder controls bind an opaque ID
+  and revision and remain owner-private.
+- Generated-file uploads use encrypted bounded chunks, exact offsets, SHA-256
+  verification and the existing final media queue. Actual generated-file handoff
+  also requires programmatic file access and tool calls in the original dot.
+- Long-answer delivery can select Markdown files or supported native chunks.
+  Markdown splitting preserves fitting code/table sections and repeats long-table
+  headers. Progressive replies coalesce small updates. Telegram albums persist
+  before offset advancement and recover failed storage writes safely.
+- Reminder controls add weekdays, bounded intervals, paused creation, pause,
+  resume, pagination and twenty delivery attempts. The management view converts
+  local IANA times and shares the loopback/origin/session gate.
+
+Local Linux gates passed all ten `check` / `test` suites with 1,092 tests passed
+and nine platform-specific skips. Windows suites passed with platform-specific
+skips recorded in the per-repository logs. From the QQ working directory, the
+canonical sibling-core transport suite passed 167 tests and the QQ tunnel suite
+passed 61 on both platforms. The actual sibling integration cases ran.
+
+An isolated Chromium run exercised create-paused, resume and history through the
+management UI. Desktop/mobile screenshots were inspected, script exceptions were
+zero and the 390-pixel layout had no document overflow. These checks use synthetic
+records. Live card callbacks, native selections, generated-file transfer and
+reminder controls still require the original dot and account-side acceptance.
+
 ## Deployment / 部署维护
 
 Stage an exact Git revision and dependency checks, settle work, back up databases consistently and switch selected adapters/router together. Keep MCP loopback and one official Tunnel target. Recovery preserves post-upgrade data, deduplication and delivery outcomes.

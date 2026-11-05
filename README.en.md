@@ -26,6 +26,8 @@ All channels default to the owner's private conversation. Lark, Telegram and Dis
 
 ## Interaction capabilities
 
+See [chat features](docs/channel-experience.en.md) for buttons, long answers, albums and reminder management.
+
 | Capability | Lark | QQ | Weixin iLink | Telegram | Discord |
 | --- | --- | --- | --- | --- | --- |
 | Processing feedback | Reactions/status card | Native input notice | Official typing | Reaction/typing | Reaction/typing |
