@@ -2,6 +2,8 @@
 
 ## Initial setup
 
+For a first IM account and official Tunnel connection, start with [Getting started](getting-started.en.md). This page covers paths, permissions, persistent operation, migration and updates.
+
 Use Node.js >=24.15 and <25. Pair each channel using its existing component flow:
 
 - [Lark configuration](https://github.com/Arcueid77/dot-lark-bridge)
