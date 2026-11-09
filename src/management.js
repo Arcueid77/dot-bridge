@@ -10,6 +10,7 @@ import {assertNode,readManifest,validateManifest,prepare,prepareStatus} from './
 import {inspectChannels} from './status.js';
 import {inspectMcp} from './rpc.js';
 import {onboarding} from './onboarding.js';
+import {reminderRequest} from './reminders.js';
 
 const installation=fileURLToPath(new URL('../',import.meta.url));
 const assets=new Map([['/',['management-ui.html','text/html; charset=utf-8']],['/app.js',['management-ui.js','text/javascript; charset=utf-8']],['/app.css',['management-ui.css','text/css; charset=utf-8']]]);
@@ -18,7 +19,7 @@ const enumValue=(value,values)=>values.includes(value)?value:null;
 const errorCodes=new Set(['configuration_invalid','manifest_unavailable','environment_unsafe','python_required','backend_configuration','mode_mismatch','listener_invalid','callback_config_name','configuration_conflict','service_key_unsafe','service_keys_reused','router_configuration','port_mismatch']);
 class ManagementError extends Error {constructor(status,code,message){super(message);this.status=status;this.code=code;}}
 const failure=(status,code,message)=>new ManagementError(status,code,message);
-const safeError=error=>({ok:false,error:errorCodes.has(error?.code)?error.code:enumValue(error?.code,['request_invalid','confirmation_required','configuration_changed','private_manifest_required','release_unavailable','release_invalid','release_directory_required','demo_read_only'])??'operation_failed',message:error instanceof ManagementError?error.message:'操作未完成。请核对配置和运行用户；私有值未返回到页面。'});
+const safeError=error=>({ok:false,error:errorCodes.has(error?.code)?error.code:enumValue(error?.code,['request_invalid','reminder_refused','confirmation_required','configuration_changed','private_manifest_required','release_unavailable','release_invalid','release_directory_required','demo_read_only'])??'operation_failed',message:error instanceof ManagementError?error.message:'操作未完成。请核对配置和运行用户；私有值未返回到页面。'});
 const samePath=(left,right)=>process.platform==='win32'?left.toLowerCase()===right.toLowerCase():left===right;
 const regular=(file,maxBytes)=>{const stat=fs.lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1||stat.size>maxBytes||!samePath(fs.realpathSync(file),path.resolve(file)))throw Error();return fs.readFileSync(file);};
 const json=(file,maxBytes=131072)=>JSON.parse(regular(file,maxBytes));
@@ -203,7 +204,7 @@ export async function collectManagementState({configFile,releasesDir,inspect=ins
 
 function readBody(request){return new Promise((resolve,reject)=>{let length=0,overflow=false;const chunks=[];request.on('data',chunk=>{length+=chunk.length;if(length>8192){overflow=true;return;}chunks.push(chunk);});request.once('end',()=>{if(overflow)return reject(failure(413,'request_invalid','请求过大。'));try{const value=JSON.parse(Buffer.concat(chunks));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();resolve(value);}catch{reject(failure(400,'request_invalid','请求格式不正确。'));}});request.once('error',()=>reject(failure(400,'request_invalid','请求未完成。')));});}
 function bodyFields(body,allowed){if(Object.keys(body).some(k=>!allowed.includes(k)))throw failure(400,'request_invalid','请求包含不适用的字段。');}
-export async function startManagement({configFile,demo=false,port=5399,releasesDir,loadState,prepareCandidate=prepare}={}){
+export async function startManagement({configFile,demo=false,port=5399,releasesDir,loadState,prepareCandidate=prepare,handleReminder=reminderRequest}={}){
   assertNode();
   if(!Number.isInteger(port)||port<0||port>65535||(!demo&&typeof configFile!=='string'))throw failure(400,'request_invalid','请指定清单文件和有效的本机端口。');
   const token=randomBytes(32).toString('base64url');let origin,loading,mutating=false;
@@ -223,12 +224,17 @@ export async function startManagement({configFile,demo=false,port=5399,releasesD
       if(request.method==='GET'&&route==='/api/session')return send(200,{token});
       if(request.method==='GET'&&route==='/api/state')return send(200,await state());
       if(request.method==='GET'&&route==='/api/releases')return send(200,{releases:demo?[]:availableReleases(releasesDir)});
-      if(request.method!=='POST'||!['/api/check-config','/api/save-config','/api/check-release','/api/upgrade-plan'].includes(route))return send(404,{ok:false,error:'not_found'});
+      if(request.method!=='POST'||!['/api/check-config','/api/save-config','/api/check-release','/api/upgrade-plan','/api/reminders','/api/reminder-save','/api/reminder-action','/api/reminder-history'].includes(route))return send(404,{ok:false,error:'not_found'});
       const supplied=request.headers['x-dotbridge-session'];
       if(request.headers.origin!==origin||typeof supplied!=='string'||supplied.length!==token.length||!timingSafeEqual(Buffer.from(supplied),Buffer.from(token)))return send(403,{ok:false,error:'session_required',message:'请从管理页面重新发起操作。'});
       if(!/^application\/json(?:;\s*charset=utf-8)?$/iu.test(request.headers['content-type']??''))return send(415,{ok:false,error:'json_required'});
       if(demo)throw failure(409,'demo_read_only','演示模式不保存配置，也不执行升级。');
       const body=await readBody(request),current=readManifest(configFile);
+      if(route.startsWith('/api/reminder')){
+        const operation={'/api/reminders':'list','/api/reminder-save':'save','/api/reminder-action':'action','/api/reminder-history':'history'}[route];
+        try{return send(200,{ok:true,...await handleReminder(current,operation,body)});}
+        catch(error){if(error?.code==='request_invalid'||error?.code==='reminder_refused')throw failure(error.status??400,error.code,error.message);throw error;}
+      }
       if(route==='/api/check-config'||route==='/api/save-config'){
         bodyFields(body,route==='/api/check-config'?['channels']:['channels','revision','confirm']);
         const candidate=candidateManifest(current,body.channels);

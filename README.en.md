@@ -4,7 +4,7 @@ Connect your chat apps to your existing ChatGPT dot. Send a message from your fa
 
 This repository is the unified installation and operations entry point. Select Lark, QQ, DingTalk, WeCom, Weixin iLink, Discord, Telegram or LINE as needed. Each channel remains maintained in its own repository.
 
-[简体中文](README.md) · [Operations](docs/operations.en.md) · [Roadmap to 1.0](docs/im-roadmap.en.md)
+[简体中文](README.md) · [Getting started](docs/getting-started.en.md) · [Operations](docs/operations.en.md) · [Roadmap to 1.0](docs/im-roadmap.en.md)
 
 
 Received attachments can be reused by their source-message index, without copying Base64 through the model. Platform format, size and media-configuration limits still apply. Plain UTF-8 and BOM-marked UTF-16 documents include bounded text excerpts; truncated excerpts are explicitly marked and the original file remains available.
@@ -25,6 +25,8 @@ All channels default to the owner's private conversation. Lark, Telegram and Dis
 | LINE | Text, images, audio, files | Text; images and audio after explicitly configuring temporary media delivery |
 
 ## Interaction capabilities
+
+See [chat features](docs/channel-experience.en.md) for buttons, long answers, albums and reminder management.
 
 | Capability | Lark | QQ | Weixin iLink | Telegram | Discord |
 | --- | --- | --- | --- | --- | --- |

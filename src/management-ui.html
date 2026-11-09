@@ -12,6 +12,7 @@
       <button class="nav active" data-view="overview"><span>◈</span> 渠道总览</button>
       <button class="nav" data-view="setup"><span>↗</span> 接入引导</button>
       <button class="nav" data-view="settings"><span>☷</span> 运行设置</button>
+      <button class="nav" data-view="reminders"><span>◷</span> 我的提醒</button>
       <button class="nav" data-view="updates"><span>↻</span> 版本与升级</button>
     </nav>
     <div class="sidebar-bottom"><span class="local-dot"></span> 仅本机访问<p>凭据保留在私有配置中</p><small id="sidebar-version">正在读取版本</small></div>
@@ -36,6 +37,27 @@
       <div class="page-heading"><div><p class="eyebrow">按需启用</p><h1>运行设置</h1><p>保存下次启动使用的渠道，不中断正在进行的对话。</p></div></div>
       <div class="panel"><h2>启用的渠道</h2><p class="muted">对应的私有环境文件需要已经准备好。保存前会先做离线检查。</p><div id="channel-options" class="settings-grid"></div><div class="settings-actions"><button id="check-config" class="button secondary">检查所选配置</button><button id="save-config" class="button primary">保存下次启动配置</button></div><p class="help">保留现有模式、数据目录和私有文件引用。凭据、回调域名与系统权限在原受保护流程中维护。</p></div>
       <div class="panel subtle"><h3>保存以后</h3><p>界面会保留原清单的私有备份。新选择在管理员核对并重启服务后生效；页面不会另起一套收发进程。</p></div>
+    </section>
+    <section id="view-reminders" class="view hidden">
+      <div class="page-heading"><div><p class="eyebrow">到点发回本人私聊</p><h1>我的提醒</h1><p>安排固定文字提醒，查看下次执行和发送记录。</p></div><button id="reminder-refresh" class="button secondary">刷新提醒</button></div>
+      <div class="select-row"><label for="reminder-channel">接收渠道</label><select id="reminder-channel"></select><label><input id="reminder-finished" type="checkbox"> 显示已结束</label></div>
+      <p id="reminder-availability" class="help"></p>
+      <div id="reminder-list" class="reminder-list"></div>
+      <div class="settings-actions"><button id="reminder-previous" class="button secondary">上一页</button><button id="reminder-next" class="button secondary">下一页</button></div>
+      <div class="panel"><h2 id="reminder-form-title">新建提醒</h2>
+        <form id="reminder-form" class="reminder-form">
+          <label class="full-width">提醒内容<textarea id="reminder-text" maxlength="2000" rows="3" required placeholder="例如，记得提交周报"></textarea></label>
+          <label>首次时间<input id="reminder-time" type="datetime-local" required></label>
+          <label>时区<input id="reminder-timezone" list="reminder-zones" required><datalist id="reminder-zones"><option value="Asia/Shanghai">北京时间</option><option value="Asia/Singapore">新加坡</option><option value="UTC"></option><option value="America/New_York"></option><option value="Europe/London"></option></datalist></label>
+          <label>重复方式<select id="reminder-repeat"><option value="once">只提醒一次</option><option value="daily">每天</option><option value="weekdays">周一至周五</option><option value="weekly">每周</option><option value="interval">每隔一段时间</option></select></label>
+          <label id="reminder-interval-label" class="hidden">间隔分钟<input id="reminder-interval" type="number" min="5" max="525600" value="60"></label>
+          <label id="reminder-until-label" class="hidden">结束时间<input id="reminder-until" type="datetime-local"></label>
+          <label id="reminder-paused-label"><input id="reminder-paused" type="checkbox"> 先保存为暂停，确认后再恢复</label>
+          <p class="help full-width">重复提醒需设置一年内的结束时间。遇到夏令时重复时刻使用第一次，缺失时刻会提示重选。</p>
+          <div class="settings-actions full-width"><button id="reminder-save" type="submit" class="button primary">保存提醒</button><button id="reminder-reset" type="button" class="button secondary">新建另一条</button></div>
+        </form>
+      </div>
+      <div id="reminder-history" class="panel hidden"></div>
     </section>
     <section id="view-updates" class="view hidden">
       <div class="page-heading"><div><p class="eyebrow">整套版本一起管理</p><h1>版本与升级</h1><p>先检查本机已有发行版，再交给管理员备份和切换。</p></div></div>

@@ -61,3 +61,9 @@ original database/storage key, inspect saved work before upgrade or rollback, an
 keep backend, router and core versions compatible. Terminal text is logically
 removed after seven days; active reminders and minimal deduplication remain under
 their original limits. This does not physically erase SQLite pages, WAL or backups.
+
+## Pause, intervals and management
+
+Schedules also support `weekdays` and `interval`. Set `interval_minutes` for interval schedules, from 5 to 525600, and keep an explicit end date. `paused=true` creates a draft without starting it. The `pause_<channel>_scheduled_message` and `resume_<channel>_scheduled_message` tools use the current revision. `get_<channel>_reminder_history` returns the last twenty attempt timestamps and sanitized outcomes. Lists accept `offset` and `include_finished` and return `next_offset`.
+
+The [reminders view](channel-experience.en.md#reminders) offers these operations in the local management page.

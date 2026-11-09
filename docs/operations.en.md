@@ -2,6 +2,8 @@
 
 ## Initial setup
 
+For a first IM account and official Tunnel connection, start with [Getting started](getting-started.en.md). This page covers paths, permissions, persistent operation, migration and updates.
+
 Use Node.js >=24.15 and <25. Pair each channel using its existing component flow:
 
 - [Lark configuration](https://github.com/Arcueid77/dot-lark-bridge)
@@ -98,3 +100,7 @@ Keep the running checkout pinned to its SHA; later fetches prepare another relea
 Before downgrading to a version without media replies, check for pending, processing or uncertain media jobs. Preserve the current version or stop for review while those jobs exist; do not delete the queue, rewrite outcomes or resend an encoded media plan as text.
 
 Media and group capabilities follow channel policy and dot capabilities. Official QQ bots and personal-account OneBot/NapCat integrations are distinct; this distribution uses the official bot route.
+
+## Downgrading reminders and choices
+
+Before returning to core 0.11 or earlier, pause or finish weekday and interval schedules, settle accepted choices and in-progress uploads, then switch to the saved compatible code and service configuration. Preserve the current databases, storage keys and delivery outcomes. Old database snapshots omit messages received since that snapshot.

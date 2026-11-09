@@ -4,7 +4,7 @@
 
 这是 DotBridge 的统一安装与运行入口。按需启用飞书、QQ、钉钉、企业微信、微信 iLink、Discord、Telegram 或 LINE；各渠道由独立项目维护。
 
-[English](README.en.md) · [安装与常驻运行](docs/operations.md) · [1.0 路线图](docs/im-roadmap.md)
+[English](README.en.md) · [从零接入教程](docs/getting-started.md) · [安装与常驻运行](docs/operations.md) · [1.0 路线图](docs/im-roadmap.md)
 
 ## 当前可用
 
@@ -23,6 +23,8 @@
 
 ## 交互能力
 
+按钮、长文、相册与提醒的使用方法见[聊天体验说明](docs/channel-experience.md)。
+
 | 能力 | 飞书 | QQ | 微信 iLink | Telegram | Discord |
 | --- | --- | --- | --- | --- | --- |
 | 处理反馈 | 表情／状态卡 | 原生输入提示 | 官方 typing | 表情／typing | 表情／typing |
@@ -30,6 +32,7 @@
 | 近期上下文 | 有 | 有 | 有 | 有 | 有 |
 | 群／话题规则 | 可配置 | 本人私聊 | 本人私聊 | 可配置 | 可配置 |
 | 本人管理命令 | 有 | 有 | 有 | 有 | 有 |
+| 选择控件 | 按钮／单选菜单 | 编号文字 | 编号文字 | 按钮 | 按钮／单选菜单 |
 
 新群默认关闭。处理反馈、渐进回复和分段由各渠道受保护配置控制；只更新真实产生的文本。命令与原 dot 控制范围见[统一交互说明](docs/new-channels.md#统一交互与群聊规则)。
 

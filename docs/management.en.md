@@ -56,3 +56,7 @@ ssh -N -L 5399:127.0.0.1:5399 YOUR_EXISTING_SSH_TARGET
 ```
 
 Open `http://127.0.0.1:5399` on the deployment computer. No public management listener or new Tunnel permission is required.
+
+## My reminders
+
+Select an existing channel to create, edit, pause, resume or cancel reminders and review the last twenty attempts. Creation can save a paused draft. Lists are paginated and can include finished records. The channel must already allow proactive owner sends. Local times use the entered IANA timezone, reject daylight-saving gaps and select the first occurrence of an overlap. See [scheduled messages](scheduled-messages.en.md).
