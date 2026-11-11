@@ -5,6 +5,9 @@ the independent dot-<channel>-bridge repositories; common protocol,
 transport and private-file code belongs in dot-bridge-core. Consume reviewed
 immutable packages instead of forking their implementation here.
 
+- Make small fixes, documentation updates and routine maintenance directly on
+  `main`; do not create a branch by default. Reserve `dev/` branches for larger
+  work that needs isolation. Preserve unrelated edits and stage explicit paths.
 - Keep `components.lock.json`, package hashes and the npm lockfile consistent.
 - Rebuild vendored artifacts from committed source, never from a private runtime
   checkout or a working directory containing untracked files.

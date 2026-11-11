@@ -131,4 +131,4 @@ and no obsolete QQ/Lark artifacts or private files.
 
 Stage an exact Git revision and dependency checks, settle work, back up databases consistently and switch selected adapters/router together. Keep MCP loopback and one official Tunnel target. Recovery preserves post-upgrade data, deduplication and delivery outcomes.
 
-运行见[中文](operations.md)或 [English operations](operations.en.md)。主干使用 `main`，PR 用 Squash；源码、包检查、进程存活和真实消息验收分别记录。
+运行见[中文](operations.md)或 [English operations](operations.en.md)。小修复、文档和常规维护直接在 `main` 完成，不默认新建分支；较大且需要隔离的工作才使用 `dev/` 分支。源码、包检查、进程存活和真实消息验收分别记录。
