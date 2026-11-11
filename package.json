@@ -1,6 +1,6 @@
 {
   "name": "dot-bridge",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "description": "Unified installation and operation of independent IM bridges to the same ChatGPT dot",
   "license": "MIT",
@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@dot-bridge/core": "file:vendor/dot-bridge-core-0.12.0.tgz",
-    "dot-lark-bridge": "file:vendor/dot-lark-bridge-0.7.0.tgz",
-    "dot-qq-bridge": "file:vendor/dot-qq-bridge-0.9.0.tgz",
+    "dot-lark-bridge": "file:vendor/dot-lark-bridge-0.7.1.tgz",
+    "dot-qq-bridge": "file:vendor/dot-qq-bridge-0.9.1.tgz",
     "dot-dingtalk-bridge": "file:vendor/dot-dingtalk-bridge-0.6.0.tgz",
     "dot-wecom-bridge": "file:vendor/dot-wecom-bridge-0.6.0.tgz",
     "dot-weixin-bridge": "file:vendor/dot-weixin-bridge-0.8.0.tgz",

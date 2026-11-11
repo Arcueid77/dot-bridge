@@ -93,6 +93,40 @@ zero and the 390-pixel layout had no document overflow. These checks use synthet
 records. Live card callbacks, native selections, generated-file transfer and
 reminder controls still require the original dot and account-side acceptance.
 
+## Review fixes 0.9.1 / 审查反馈修复
+
+The 2026-11-11 composition pins QQ 0.9.1 and Lark 0.7.1; core remains 0.12.0.
+QQ enforces the approved one-message experiment at tool and provider entrypoints,
+including native streams, media, choices and proactive writes, while preserving
+the router's catalog contract. Its Docker command now enters persistent-service
+preflight. Lark reuses core private-file checks in every durable database mode,
+including existing SQLite sidecars, without changing unsafe files on refusal.
+The existing upload fix also passes 5 MiB file and image tests through a local TLS
+proxy fixture with destination, redirect and revocation restrictions intact.
+
+Local Node 24.22.2 results:
+
+| Repository | Windows passed / skipped | Linux passed / skipped |
+| --- | --- | --- |
+| QQ | 271 / 0 | 263 / 8 |
+| Lark | 287 / 20 | 304 / 3 |
+| Distribution | 38 / 1 | 39 / 0 |
+
+All three `check` commands passed on both systems. The two Linux ownership cases
+requiring root passed separately, as did core's three private-file checks. The
+remaining Linux skips are eight Windows-only QQ cases and one audio guard case
+whose protected runtime is not installed in this local fixture. Windows skips
+include Linux-only storage/audio cases and the systemd unit verifier. New
+regressions reproduced three QQ and eight Lark failures on previous source;
+the fixed cases passed. The installed distribution exercised all eight real
+provider-disabled readiness backends. Packaging checks found the fixed artifacts
+and no obsolete QQ/Lark artifacts or private files.
+
+本批次已完成本地修复、固定包构建和 Windows／Linux 检查；尚未运行远程 CI、
+完整 Docker 镜像构建或真实账号验收，也未部署到 VPS。这里的 Node 子进程测试
+验证 Docker 默认命令会进入服务预检，缺配置时非零退出；它不代表整套容器环境已验收。
+各仓库的开发说明保留详细边界，运行状态不从源码版本推断。
+
 ## Deployment / 部署维护
 
 Stage an exact Git revision and dependency checks, settle work, back up databases consistently and switch selected adapters/router together. Keep MCP loopback and one official Tunnel target. Recovery preserves post-upgrade data, deduplication and delivery outcomes.

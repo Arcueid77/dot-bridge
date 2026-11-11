@@ -11,19 +11,19 @@
     },
     "lark": {
       "package": "dot-lark-bridge",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "repository": "https://github.com/Arcueid77/dot-lark-bridge",
-      "revision": "cf532ccbe87f4e2bff4a62994bd59306ac5c0831",
-      "artifact": "vendor/dot-lark-bridge-0.7.0.tgz",
-      "sha256": "8a0502168f617d0651eb5c49c4480c9d6b5dce16427a7e48f2b03761adf022bf"
+      "revision": "d0df03b5175c4a037b99ab574914ad31351d8865",
+      "artifact": "vendor/dot-lark-bridge-0.7.1.tgz",
+      "sha256": "876fcbd1ce5857df8b158c1bae812ad43283729945c34ed77de9a9591fb5b44e"
     },
     "qq": {
       "package": "dot-qq-bridge",
-      "version": "0.9.0",
+      "version": "0.9.1",
       "repository": "https://github.com/Arcueid77/dot-qq-bridge",
-      "revision": "2e19e9412eb0f05b2a3241ac319a9b3400908ab6",
-      "artifact": "vendor/dot-qq-bridge-0.9.0.tgz",
-      "sha256": "597fe44cef611309acb27dddf74e171f473700166a373b56dfc3947a0e913eec"
+      "revision": "8d4b6cc872c7b8ee97bb35951c9a7f71a4ec1de4",
+      "artifact": "vendor/dot-qq-bridge-0.9.1.tgz",
+      "sha256": "dfa0d75f118e77d6e173a376be43cfe18d1306dd6275ada11ca8b18612e03844"
     },
     "dingtalk": {
       "package": "dot-dingtalk-bridge",
