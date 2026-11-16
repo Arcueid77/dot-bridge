@@ -3,75 +3,75 @@
   "components": {
     "core": {
       "package": "@dot-bridge/core",
-      "version": "0.14.0",
+      "version": "0.14.1",
       "repository": "https://github.com/Arcueid77/dot-bridge-core",
-      "revision": "63de5d01d103188681265f1676561a322daa3836",
-      "artifact": "vendor/dot-bridge-core-0.14.0.tgz",
-      "sha256": "cccbd3a192b5c214a84c67e904212e297720db5e8e38ae52a61cf8ca7a6ddf25"
+      "revision": "49fcf700a08be92706155df35e3cec1acdce6b5a",
+      "artifact": "vendor/dot-bridge-core-0.14.1.tgz",
+      "sha256": "1a1ed61ed8f5a76d6dd21595132d01ecc7f72b6d08cf046d515bc9633aad8824"
     },
     "lark": {
       "package": "dot-lark-bridge",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "repository": "https://github.com/Arcueid77/dot-lark-bridge",
-      "revision": "8a9926ee100f15fd5ca9d132a2e76f3d05604094",
-      "artifact": "vendor/dot-lark-bridge-0.8.0.tgz",
-      "sha256": "f8583434b9d1102e0caacda9ed9fcf032a6bb7fb9aa2c62964e82ea65b449cf0"
+      "revision": "3cd5f18e46f1847fbf7b2f0cea3192b8830bf806",
+      "artifact": "vendor/dot-lark-bridge-0.8.1.tgz",
+      "sha256": "fde54b149c9abe6bb3680e4d70a0614695bf9e72b05790991c4402fb66a1571f"
     },
     "qq": {
       "package": "dot-qq-bridge",
-      "version": "0.10.0",
+      "version": "0.10.1",
       "repository": "https://github.com/Arcueid77/dot-qq-bridge",
-      "revision": "f74289744dbe5703e2def9c3f94c0f1fda6912b4",
-      "artifact": "vendor/dot-qq-bridge-0.10.0.tgz",
-      "sha256": "84a6a5b9e66d347d10fa910eb065c58c82f7feff03e0a544d91bc6fabb849782"
+      "revision": "acaa9aeb64ca3e773f6052e095e3d34c21849719",
+      "artifact": "vendor/dot-qq-bridge-0.10.1.tgz",
+      "sha256": "842914b9a129c52be76a488801159eed0fb1036662f03ca8d49540e35e254988"
     },
     "dingtalk": {
       "package": "dot-dingtalk-bridge",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "repository": "https://github.com/Arcueid77/dot-dingtalk-bridge",
-      "revision": "ee48eb9377bb27d508e2f2a3cc434425abd0d7b0",
-      "artifact": "vendor/dot-dingtalk-bridge-0.7.0.tgz",
-      "sha256": "0a1555bc002fa35793c409f0fe288515ce2e1bd5e67deeb64bb6323a2d94e06f"
+      "revision": "7f8e3aaeb91c7f060975b7e5947914d81e8b9f43",
+      "artifact": "vendor/dot-dingtalk-bridge-0.7.1.tgz",
+      "sha256": "44a27c509aaa5adc131d62905c2935b8433ee0de9cbc8b564f4b16cfdb310f03"
     },
     "wecom": {
       "package": "dot-wecom-bridge",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "repository": "https://github.com/Arcueid77/dot-wecom-bridge",
-      "revision": "08b0a8ddcff1fd6ae627b706ffac87b6f9f5e3ae",
-      "artifact": "vendor/dot-wecom-bridge-0.7.0.tgz",
-      "sha256": "4049fb65c33bce6c80835112a48aa9d6514e4ea795dcdf6c995ec692b9d713c8"
+      "revision": "c1fec6ab451a271f704536aa067f43e28a8ced60",
+      "artifact": "vendor/dot-wecom-bridge-0.7.1.tgz",
+      "sha256": "a10725138678473a7a495bbafc5f0929b7ba1de4505f962f5d73f1a331655c47"
     },
     "weixin": {
       "package": "dot-weixin-bridge",
-      "version": "0.9.0",
+      "version": "0.9.1",
       "repository": "https://github.com/Arcueid77/dot-weixin-bridge",
-      "revision": "720d6a37c057a267cab8291292b6d4dd3431c96a",
-      "artifact": "vendor/dot-weixin-bridge-0.9.0.tgz",
-      "sha256": "a9732f8e28784c9a40a6abeed70161645be65329c4b44f22234b01a226b018bf"
+      "revision": "563fcfff10114aee8a69980d14829c1db6f07a91",
+      "artifact": "vendor/dot-weixin-bridge-0.9.1.tgz",
+      "sha256": "a45d8c251a66c5e04cdfca87736a0bcbf2709132a96606f3ef397883c6a257b3"
     },
     "discord": {
       "package": "dot-discord-bridge",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "repository": "https://github.com/Arcueid77/dot-discord-bridge",
-      "revision": "935113eadb19f0b57af248f391dcf92bd38006a2",
-      "artifact": "vendor/dot-discord-bridge-0.8.0.tgz",
-      "sha256": "938b56167ad4ce03d9a2c83e09140e77cbba83be266b95f033a09d8eebb59e83"
+      "revision": "f9b138186965ca1e0e695995cd4d8cb850cb7038",
+      "artifact": "vendor/dot-discord-bridge-0.8.1.tgz",
+      "sha256": "1655b530b1e3d86494e408c818c4a0727bfe7e4262246146a3f667f8287991e3"
     },
     "telegram": {
       "package": "dot-telegram-bridge",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "repository": "https://github.com/Arcueid77/dot-telegram-bridge",
-      "revision": "1667fb8a86cc15d4f305ee9ae3b95d8a06399cd2",
-      "artifact": "vendor/dot-telegram-bridge-0.8.0.tgz",
-      "sha256": "fac6661d72c6d4e8acb3256b593a5a77373b1ee20e6d5e9f015520ebe468cdbc"
+      "revision": "2643c6dba00cb4e6fd9dcc1889a097390fc29d15",
+      "artifact": "vendor/dot-telegram-bridge-0.8.1.tgz",
+      "sha256": "8a614f8ab9ce7940fb44210611864d707dd98ea4cf8f2e2e0cb93c5aa200bf2b"
     },
     "line": {
       "package": "dot-line-bridge",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "repository": "https://github.com/Arcueid77/dot-line-bridge",
-      "revision": "1f1396854d389b40de14f343fe18751e1d48ade8",
-      "artifact": "vendor/dot-line-bridge-0.7.0.tgz",
-      "sha256": "00d42f19683720e3ce06dddf677e5f980600b7a83d7b8fcf0ae52e75bc9591ae"
+      "revision": "e09931ca13fe5c81debdac03c570142aeceadda5",
+      "artifact": "vendor/dot-line-bridge-0.7.1.tgz",
+      "sha256": "627cb948dfd9e81fb5986812222c3f742db3a58b1d8d8abcd24438cd6b67931c"
     }
   }
 }

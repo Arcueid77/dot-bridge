@@ -143,3 +143,10 @@ Stage an exact Git revision and dependency checks, settle work, back up database
 VPS 以最终运行用户执行的合成迁移检查 16 项全部通过，覆盖旧双渠道、五／八渠道清单、WAL、内嵌清单加密恢复、去重及 uncertain 保存。受保护 eSpeak／FFmpeg 管道合成中文 Opus 成功。生产凭据跨主机迁移需按真实切换安排核对。
 
 总包加入运行目录对账、群规则版本化编辑、拒绝发送的确认重试入口及接入指引。QQ群 @、钉钉配置群／表情／可选 AI 卡片、企微配置群／原生回复流、LINE 加载／快捷回复／原生 postback、Discord 原生合成语音及贴图图片、Telegram 视频／贴图、微信视频读取和会话诊断均有合成回归。钉钉、企微、LINE 的真实账号仍待接入验收；五条现有连接的新功能还需原 dot 刷新与逐项真实消息检查。历史五渠道往返与重启验收继续见既有记录。
+
+
+### 0.10.1 speech retry correction / 语音重试修复
+
+Core 0.14.1 (`49fcf700a08be92706155df35e3cec1acdce6b5a`) binds a retry after failed local speech conversion to the task's already retained complete answer. The regression reproduces the former text mismatch, rejects a different replacement before conversion and allows the original answer to retry. Local core validation passed 318 tests with five platform skips. Component artifacts are rebuilt from immutable committed source.
+
+core 0.14.1 将本地语音转换失败后的重试绑定到已保存的完整结果。新增回归先复现原问题，再验证不同文字会在转换前拒绝、原文字可继续重试。本地核心检查 318 项通过、5 项平台跳过；各组件按固定提交重新生成依赖包。
