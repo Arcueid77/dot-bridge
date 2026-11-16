@@ -29,3 +29,20 @@ Reminders support once, daily, weekly, Monday through Friday, and fixed interval
 The management page has a reminders view for creation, editing, pause, resume, cancellation and the last twenty delivery attempts. A reminder can be saved paused for review. Delivery uses the selected channel's already paired owner private chat and requires that channel's proactive-send setting.
 
 Resuming recurring work skips old paused occurrences. Edit a missed one-time reminder to a future time before resuming. Unknown delivery outcomes stay available for owner reconciliation. See [scheduled messages](scheduled-messages.en.md) and [management access](management.en.md).
+
+
+## Long work and result lookup
+
+The original dot can track a task before long work and receive its source-bound reference, passive deadline and remaining seconds. A complete text result can be saved in encrypted state for the source retention period. In the paired DM, use `/tasks`, then `/result reference`. Channels with short passive windows, including LINE, can return a saved result in that fresh query's response.
+
+## Consecutive messages
+
+Operators can add `queue` to the protected interaction policy, for example `{"mode":"batch","window_ms":750,"max_messages":5}`. Modes are independent, serial and batch; independent is the default. Serial waits for earlier work in the same context. Batch combines unread plain-text sources within the short window while retaining every source and its outcome. Attachments, quotes and work already started stay separate. Existing group/topic/member isolation continues to apply.
+
+## Voice answers
+
+After an administrator enables local eSpeak NG, ask for a short spoken answer. The original dot checks the channel's speech tools and supplies the genuine complete answer, up to 2000 characters and 120 seconds. The text is also retained in its task. QQ/Weixin use native voice, Lark/Telegram use Opus, Discord can use a native voice message with a real waveform, LINE uses MP3, and DingTalk/WeCom return a WAV file. The application's media permissions and protected settings apply.
+
+## Explicit rejection retry
+
+The management page offers a confirmed retry for a known rejected one-time proactive message. It keeps the original ID and current revision and records a new attempt. Recurring reminders use edit/resume for future occurrences. Ambiguous outcomes remain uncertain for owner review.

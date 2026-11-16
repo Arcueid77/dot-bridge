@@ -159,3 +159,12 @@ node bin/dotbridge.js doctor --config /var/lib/dot-bridge/bridge.json
 ## 降级新版提醒与选项
 
 降级到 core 0.11 或更早版本前，先暂停或结束工作日、间隔提醒，并处理已经接收的选项和正在上传的附件。旧版缺少这些入口。保留当前数据库、存储密钥和发送结果，切回已保存的兼容发行目录及服务配置。恢复旧快照会丢失升级后收到的消息。
+
+
+## 本地语音与目录核对
+
+Linux 主机可安装发行版官方源中的 espeak-ng、ffmpeg、util-linux，并复用原受保护音频 guard 和 `BRIDGE_LOCK_DIRECTORY`。需要语音的渠道环境中设置 `DOT_BRIDGE_SPEECH_SYNTHESIS=local-espeak`，可用 `DOT_BRIDGE_SPEECH_VOICE=zh` 选择本地声音。修改后按原流程重启对应后端，用 `check_<channel>_speech` 核对真实准备状态。Discord 原生语音另需 `DISCORD_NATIVE_VOICE=enabled`。
+
+`status` 的 `catalogStatus` 比较安装目录与运行服务实际公布的完整工具／事件目录，并返回运行 SHA。发现差异时先检查有效 ExecStart 和组件固定版本，再刷新原 dot 的原插件。此检查会明确标明客户端目录尚需核对。
+
+降级包含合并批次的新数据库前，先停止新输入并处理可完成工作，选择支持现有批次、任务和提醒格式的兼容版本。保留 uncertain、原数据库和密钥，并核对每条来源及唯一回复锚点。

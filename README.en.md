@@ -11,7 +11,7 @@ Received attachments can be reused by their source-message index, without copyin
 
 ## Available channels
 
-All channels default to the owner's private conversation. Lark, Telegram and Discord may explicitly opt into protected groups/topics. Replies return to the original conversation.
+All channels default to the owner's private conversation. Lark, QQ, DingTalk, WeCom, Telegram and Discord may explicitly opt into protected groups; topics follow provider capabilities. Replies return to the original conversation.
 
 | Channel | Receive | Reply |
 | --- | --- | --- |
@@ -19,9 +19,9 @@ All channels default to the owner's private conversation. Lark, Telegram and Dis
 | Official QQ bot | Text, images, audio, files | Text, images, native voice, files |
 | DingTalk | Text, images, audio, files | Text, images, AMR voice, files |
 | WeCom smart bot | Text, images, files; platform transcript for voice | Text, images, AMR voice, files |
-| Weixin iLink | Text, images, audio, files | Text, images, native voice, files |
-| Discord | Text, images, audio, files | Text, images, playable audio attachments, files |
-| Telegram | Text, images, audio, files | Text, images, voice, files |
+| Weixin iLink | Text, images, audio, files, video | Text, images, native voice, files |
+| Discord | Text, images, audio, files, video, stickers | Text, images, optional native voice, files, video, sticker images |
+| Telegram | Text, images, audio, files, video, stickers | Text, images, voice, files, MP4 video, native stickers |
 | LINE | Text, images, audio, files | Text; images and audio after explicitly configuring temporary media delivery |
 
 ## Interaction capabilities
@@ -44,7 +44,7 @@ See [channel setup and limits](docs/new-channels.en.md) for formats and size lim
 
 Lark media requires the corresponding interaction policy and app permissions; follow the component's configuration guide.
 
-DingTalk, WeCom, Weixin, Discord and Telegram default to a complete text file above native single-message limits. Telegram/Discord can opt into durably acknowledged native parts. LINE splits long text within one reply request; media hosting remains disabled until configured, and generic file messages are not available. Audio replies use existing recordings, without automatic speech synthesis.
+DingTalk, WeCom, Weixin, Discord and Telegram default to a complete text file above native single-message limits. Telegram/Discord can opt into durably acknowledged native parts. LINE splits long text within one reply request; media hosting remains disabled until configured, and generic file messages are not available. Audio replies can use existing recordings or the explicitly enabled protected local speech synthesizer.
 
 ## Install
 

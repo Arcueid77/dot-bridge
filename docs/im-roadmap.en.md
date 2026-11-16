@@ -123,3 +123,10 @@ Future research candidates include Matrix (homeserver/device credentials and E2E
 Platform tokens and the Tunnel runtime key have separate purposes. QQ personal-account OneBot/NapCat is a separate integration from the official QQ bot.
 
 </details>
+
+
+## 2026-11-17 implementation progress
+
+Source is now in core 0.14 and distribution 0.10 preparation. Implemented work includes retained task results, consecutive-message queues, local speech, QQ/DingTalk/WeCom group policies, native DingTalk/WeCom processing flows, LINE interactions, Weixin diagnostics, selected video/sticker support, catalog reconciliation and group editing. Manifest-derived migration tooling covers five/eight channels with synthetic encrypted recovery checked on Linux and Windows.
+
+Remaining 1.0 acceptance covers the original dot's refreshed directory/tasks, new interactions over the existing five real connections, real DingTalk/WeCom/LINE accounts, destination-host migration and long-running renewal. Hosted-dot task control follows its actual management interface. See development records for the latest source and validation layers.

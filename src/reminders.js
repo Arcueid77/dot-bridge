@@ -93,15 +93,16 @@ export async function reminderRequest(
   if (body.confirm !== true) throw invalid('请确认这次提醒操作。');
   if (operation === 'action') {
     if (
-      !['pause', 'resume', 'cancel'].includes(body.action) ||
+      !['pause', 'resume', 'cancel', 'retry'].includes(body.action) ||
       !body.outbound_id ||
       !Number.isSafeInteger(body.expected_revision) ||
       body.expected_revision < 1
     )
       throw invalid('提醒操作参数无效。');
-    return call(`${body.action}_${channel}_scheduled_message`, {
+    return call(body.action === 'retry' ? `retry_${channel}_outbound` : `${body.action}_${channel}_scheduled_message`, {
       outbound_id: body.outbound_id,
       expected_revision: body.expected_revision,
+      ...(body.action === 'retry' ? {confirm: true} : {}),
     });
   }
   if (

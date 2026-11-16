@@ -8,9 +8,11 @@ import {readPrivateFile,openPrivateDirectory} from '@dot-bridge/core/platform/pr
 import {components,channelIds} from './components.js';
 import {assertNode,readManifest,validateManifest,prepare,prepareStatus} from './config.js';
 import {inspectChannels} from './status.js';
+import {inspectCatalog} from './catalog-status.js';
 import {inspectMcp} from './rpc.js';
 import {onboarding} from './onboarding.js';
 import {reminderRequest} from './reminders.js';
+import {readGroupRules,saveGroupRules,GroupRulesError} from './group-rules.js';
 
 const installation=fileURLToPath(new URL('../',import.meta.url));
 const assets=new Map([['/',['management-ui.html','text/html; charset=utf-8']],['/app.js',['management-ui.js','text/javascript; charset=utf-8']],['/app.css',['management-ui.css','text/css; charset=utf-8']]]);
@@ -196,13 +198,13 @@ function demoState(){
 export async function collectManagementState({configFile,releasesDir,inspect=inspectMcp,inspectStatus=inspectChannels}={}){
   let manifest;try{manifest=readManifest(configFile);}catch{return {demo:false,mode:null,configurationAvailable:false,revision:null,installation:releaseInfo(),routerReachable:null,updatedAt:new Date().toISOString(),channels:channelIds.map(id=>({id,name:components[id].name,selected:false,presentation:channelPresentation(null,{selected:false}),guide:setupGuide(id)})),releaseSelectionAvailable:Boolean(releasesDir),work:{known:false,pending:null,processing:null,uncertain:null},notice:'配置清单不可用。请先用 init 创建清单，并准备受保护的环境文件。'};}
   const plan=await prepareStatus(manifest),statuses=await inspectStatus(plan),map=new Map(statuses.map(item=>[item.channel,item]));
-  let routerReachable=false;
-  if(plan.router){try{const [tools,events]=await Promise.all([inspect(plan.router),inspect(plan.router,'events/list')]);routerReachable=tools.status===200&&events.status===200&&Array.isArray(tools.body?.result?.tools)&&Array.isArray(events.body?.result?.events);}catch{}}
-  const channels=channelIds.map(id=>{const value=map.get(id)??{},selected=manifest.selected.includes(id);return {id,name:components[id].name,selected,...value,presentation:channelPresentation(value,{selected,mode:manifest.mode}),guide:setupGuide(id,value)};});
-  return {demo:false,mode:manifest.mode,configurationAvailable:true,revision:revision(manifest),installation:releaseInfo(),routerReachable,updatedAt:new Date().toISOString(),channels,releaseSelectionAvailable:Boolean(releasesDir),work:workSummary(channels),notice:manifest.mode==='readiness'?'当前为预检模式，不连接真实聊天账号。':null};
+  const catalogStatus=await inspectCatalog(plan,{inspect});
+  const routerReachable=catalogStatus.reachable;
+  const channels=channelIds.map(id=>{const value=map.get(id)??{},selected=manifest.selected.includes(id);return {id,name:components[id].name,selected,groupsSupported:components[id].adapter.scopes.includes('configured'),...value,presentation:channelPresentation(value,{selected,mode:manifest.mode}),guide:setupGuide(id,value)};});
+  return {demo:false,mode:manifest.mode,configurationAvailable:true,revision:revision(manifest),installation:releaseInfo(),routerReachable,catalogStatus,updatedAt:new Date().toISOString(),channels,releaseSelectionAvailable:Boolean(releasesDir),work:workSummary(channels),notice:manifest.mode==='readiness'?'当前为预检模式，不连接真实聊天账号。':null};
 }
 
-function readBody(request){return new Promise((resolve,reject)=>{let length=0,overflow=false;const chunks=[];request.on('data',chunk=>{length+=chunk.length;if(length>8192){overflow=true;return;}chunks.push(chunk);});request.once('end',()=>{if(overflow)return reject(failure(413,'request_invalid','请求过大。'));try{const value=JSON.parse(Buffer.concat(chunks));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();resolve(value);}catch{reject(failure(400,'request_invalid','请求格式不正确。'));}});request.once('error',()=>reject(failure(400,'request_invalid','请求未完成。')));});}
+function readBody(request,maxBytes=8192){return new Promise((resolve,reject)=>{let length=0,overflow=false;const chunks=[];request.on('data',chunk=>{length+=chunk.length;if(length>maxBytes){overflow=true;return;}chunks.push(chunk);});request.once('end',()=>{if(overflow)return reject(failure(413,'request_invalid','请求过大。'));try{const value=JSON.parse(Buffer.concat(chunks));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();resolve(value);}catch{reject(failure(400,'request_invalid','请求格式不正确。'));}});request.once('error',()=>reject(failure(400,'request_invalid','请求未完成。')));});}
 function bodyFields(body,allowed){if(Object.keys(body).some(k=>!allowed.includes(k)))throw failure(400,'request_invalid','请求包含不适用的字段。');}
 export async function startManagement({configFile,demo=false,port=5399,releasesDir,loadState,prepareCandidate=prepare,handleReminder=reminderRequest}={}){
   assertNode();
@@ -224,12 +226,23 @@ export async function startManagement({configFile,demo=false,port=5399,releasesD
       if(request.method==='GET'&&route==='/api/session')return send(200,{token});
       if(request.method==='GET'&&route==='/api/state')return send(200,await state());
       if(request.method==='GET'&&route==='/api/releases')return send(200,{releases:demo?[]:availableReleases(releasesDir)});
-      if(request.method!=='POST'||!['/api/check-config','/api/save-config','/api/check-release','/api/upgrade-plan','/api/reminders','/api/reminder-save','/api/reminder-action','/api/reminder-history'].includes(route))return send(404,{ok:false,error:'not_found'});
+      if(request.method!=='POST'||!['/api/check-config','/api/save-config','/api/check-release','/api/upgrade-plan','/api/reminders','/api/reminder-save','/api/reminder-action','/api/reminder-history','/api/group-rules','/api/group-save'].includes(route))return send(404,{ok:false,error:'not_found'});
       const supplied=request.headers['x-dotbridge-session'];
       if(request.headers.origin!==origin||typeof supplied!=='string'||supplied.length!==token.length||!timingSafeEqual(Buffer.from(supplied),Buffer.from(token)))return send(403,{ok:false,error:'session_required',message:'请从管理页面重新发起操作。'});
       if(!/^application\/json(?:;\s*charset=utf-8)?$/iu.test(request.headers['content-type']??''))return send(415,{ok:false,error:'json_required'});
       if(demo)throw failure(409,'demo_read_only','演示模式不保存配置，也不执行升级。');
-      const body=await readBody(request),current=readManifest(configFile);
+      const body=await readBody(request,route.startsWith('/api/group-')?98304:8192),current=readManifest(configFile);
+      if (route === '/api/group-rules' || route === '/api/group-save') {
+        bodyFields(body, route === '/api/group-rules' ? ['channel'] : ['channel','groups','revision','confirm']);
+        try {
+          const result = route === '/api/group-rules' ? readGroupRules(current, body.channel) :
+            await saveGroupRules(current, body.channel, body.groups, body.revision, {confirm: body.confirm});
+          return send(200, {ok: true, ...result});
+        } catch (error) {
+          if (error instanceof GroupRulesError) throw failure(error.status, error.code, error.message);
+          throw failure(409, 'group_policy_unavailable', '群规则暂时无法读取，请核对渠道私有配置。');
+        }
+      }
       if(route.startsWith('/api/reminder')){
         const operation={'/api/reminders':'list','/api/reminder-save':'save','/api/reminder-action':'action','/api/reminder-history':'history'}[route];
         try{return send(200,{ok:true,...await handleReminder(current,operation,body)});}

@@ -1,6 +1,26 @@
 import http from 'node:http';
 import {VERSION,SERVICE_HEADER,metadata} from '@dot-bridge/core/router/common.js';
 import {OperatorError} from './errors.js';
+export function inspectRuntime(endpoint, {timeout = 3000} = {}) {
+  return new Promise((resolve, reject) => {
+    if (endpoint.host !== '127.0.0.1' || !endpoint.key) {reject(new OperatorError('runtime_unavailable','运行版本暂不可用。'));return;}
+    let size = 0;
+    const chunks = [];
+    const request = http.get({host: endpoint.host, port: endpoint.port, path: '/runtime', agent: false,
+      headers: {accept: 'application/json', [SERVICE_HEADER]: endpoint.key}}, response => {
+      response.on('data', chunk => {size += chunk.length;if (size > 65536) request.destroy();else chunks.push(chunk);});
+      response.on('error', reject);
+      response.on('end', () => {
+        try {
+          if (response.statusCode !== 200) throw Error();
+          resolve(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))));
+        } catch {reject(new OperatorError('runtime_unavailable','运行版本暂不可用。'));}
+      });
+    });
+    request.setTimeout(timeout, () => request.destroy());
+    request.on('error', reject);
+  });
+}
 export function inspectReadiness(endpoint,{timeout=2000}={}) {
   return new Promise((resolve,reject)=>{
     if(endpoint.host!=='127.0.0.1'){reject(new OperatorError('listener_invalid','状态检查只访问本机监听。'));return;}

@@ -5,8 +5,8 @@ import {parseArgs} from 'node:util';
 import {channelIds,components} from './components.js';
 import {assertNode,readManifest,prepare,prepareStatus} from './config.js';
 import {startStack} from './stack.js';
-import {inspectMcp} from './rpc.js';
 import {inspectChannels} from './status.js';
+import {inspectCatalog} from './catalog-status.js';
 import {onboardingText} from './onboarding.js';
 import {writeUnits,serviceAction} from './systemd.js';
 import {OperatorError,refuse} from './errors.js';
@@ -80,12 +80,12 @@ export async function main(args=process.argv.slice(2)) {
     const plan=command==='status'?await prepareStatus(manifest):await prepare(manifest);
     if(command==='doctor'){write({configurationReady:true,mode:manifest.mode,channels:manifest.selected,providerNetworkChecked:false});return;}
     if(command==='status'){
-      const [tools,events,channelStatus]=await Promise.all([
-        plan.router?inspectMcp(plan.router).catch(()=>({})):Promise.resolve({}),plan.router?inspectMcp(plan.router,'events/list').catch(()=>({})):Promise.resolve({}),
+      const [catalogStatus,channelStatus]=await Promise.all([
+        inspectCatalog(plan),
         manifest.mode==='live'?inspectChannels(plan):Promise.resolve([])
       ]);
-      const reachable=tools.status===200&&events.status===200&&Array.isArray(tools.body?.result?.tools)&&Array.isArray(events.body?.result?.events);
-      write({authenticatedMcpReachable:reachable,mode:manifest.mode,channels:manifest.selected,channelStatus,...(plan.errors.router?{routerConfigurationError:plan.errors.router}:{}),toolCount:reachable?tools.body.result.tools.length:0,eventCount:reachable?events.body.result.events.length:0,providerDeliveryChecked:false});if(!reachable||channelStatus.some(item=>!item.authenticatedMcpReachable))process.exitCode=1;return;
+      const reachable=catalogStatus.reachable;
+      write({authenticatedMcpReachable:reachable,mode:manifest.mode,channels:manifest.selected,channelStatus,catalogStatus,...(plan.errors.router?{routerConfigurationError:plan.errors.router}:{}),toolCount:catalogStatus.toolCount??0,eventCount:catalogStatus.eventCount??0,providerDeliveryChecked:false});if(!reachable||catalogStatus.matchesInstalled===false||channelStatus.some(item=>!item.authenticatedMcpReachable))process.exitCode=1;return;
     }
     let stack,stopRequested=false;const controller=new AbortController();
     const stop=()=>{stopRequested=true;controller.abort();void stack?.close();};

@@ -132,3 +132,14 @@ and no obsolete QQ/Lark artifacts or private files.
 Stage an exact Git revision and dependency checks, settle work, back up databases consistently and switch selected adapters/router together. Keep MCP loopback and one official Tunnel target. Recovery preserves post-upgrade data, deduplication and delivery outcomes.
 
 运行见[中文](operations.md)或 [English operations](operations.en.md)。小修复、文档和常规维护直接在 `main` 完成，不默认新建分支；较大且需要隔离的工作才使用 `dev/` 分支。源码、包检查、进程存活和真实消息验收分别记录。
+
+
+## 0.10 功能准备（2026-11-17）
+
+共享 core 0.14.0 固定提交 `63de5d01d103188681265f1676561a322daa3836`，Linux／Windows CI 通过。本轮加入本地 eSpeak 语音、加密长任务结果、三种会话队列、已拒绝一次性主动发送的明确确认重试、原生处理流及鉴权运行版本／目录指纹。QQ／飞书继续使用原数据库和租约工作器。
+
+本地组件验证已通过，QQ 276 项、飞书 290 项并有 20 项 Windows 平台跳过、钉钉 23 项、企微 27 项、微信 49 项、Discord 34 项、Telegram 40 项、LINE 31 项。QQ／飞书实际独立包及聚合器集成用例有执行。Windows 私有文件检查使用 Python 3.12。
+
+VPS 以最终运行用户执行的合成迁移检查 16 项全部通过，覆盖旧双渠道、五／八渠道清单、WAL、内嵌清单加密恢复、去重及 uncertain 保存。受保护 eSpeak／FFmpeg 管道合成中文 Opus 成功。生产凭据跨主机迁移需按真实切换安排核对。
+
+总包加入运行目录对账、群规则版本化编辑、拒绝发送的确认重试入口及接入指引。QQ群 @、钉钉配置群／表情／可选 AI 卡片、企微配置群／原生回复流、LINE 加载／快捷回复／原生 postback、Discord 原生合成语音及贴图图片、Telegram 视频／贴图、微信视频读取和会话诊断均有合成回归。钉钉、企微、LINE 的真实账号仍待接入验收；五条现有连接的新功能还需原 dot 刷新与逐项真实消息检查。历史五渠道往返与重启验收继续见既有记录。

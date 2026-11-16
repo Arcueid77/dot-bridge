@@ -3,6 +3,7 @@ const titles={overview:'渠道总览',setup:'接入引导',settings:'运行设�
 const symbols={lark:'飞',qq:'QQ',dingtalk:'钉',wecom:'企',weixin:'微',discord:'D',telegram:'T',line:'L'};
 const english={lark:'FEISHU / LARK',qq:'QQ OFFICIAL BOT',dingtalk:'DINGTALK',wecom:'WECOM',weixin:'WEIXIN ILINK',discord:'DISCORD',telegram:'TELEGRAM',line:'LINE'};
 let session,snapshot,selectedRelease;
+let groupEditor = null;
 let reminderOffset=0;
 let nextReminderOffset=null;
 let editingReminder=null;
@@ -15,10 +16,21 @@ const replace=(element,children)=>element.replaceChildren(...children);
 function feedback(text,error=false){$('feedback').textContent=text;$('feedback').className='feedback'+(error?' error':'');}
 function view(id){for(const key of Object.keys(titles))$('view-'+key).classList.toggle('hidden',key!==id);for(const button of document.querySelectorAll('.nav')){button.classList.toggle('active',button.dataset.view===id);if(button.dataset.view===id)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}$('breadcrumb').textContent='工作台 / '+titles[id];if(id==='setup')renderSetup();if(id==='reminders')void loadReminders().catch(error=>feedback(error.message,true));if(id==='updates')void releases().catch(()=>feedback('发行目录暂时不可用，请核对启动参数。',true));}
 async function api(url,body){const response=await fetch(url,{method:body?'POST':'GET',cache:'no-store',headers:body?{'Content-Type':'application/json','X-DotBridge-Session':session}:{},...(body?{body:JSON.stringify(body)}:{})});const result=await response.json();if(!response.ok)throw Error(result.message??'操作未完成，请刷新后检查。');return result;}
-async function busy(button,action){button.disabled=true;try{await action();}catch(error){feedback(error.message,true);}finally{button.disabled=button.id==='reminder-save'&&!reminderSendEnabled;}}
+async function busy(button,action){
+  button.disabled=true;
+  try{await action();}catch(error){feedback(error.message,true);}
+  finally{
+    if(button.id==='group-save')button.disabled=!groupEditor?.revision;
+    else if(button.id==='group-load')button.disabled=!$('group-channel').value||snapshot?.demo===true;
+    else button.disabled=button.id==='reminder-save'&&!reminderSendEnabled;
+  }
+}
 function summaryCard(label,value,unit,icon){const card=node('div','summary-card'),text=node('div');text.append(node('p',null,label));const strong=node('strong',null,String(value));strong.append(node('small',null,unit));text.append(strong);card.append(text,node('span','summary-icon',icon));return card;}
 function renderState(value){
   snapshot=value;$('sidebar-version').textContent='DotBridge '+value.installation.version;$('current-version').textContent='v'+value.installation.version;
+  const catalog=value.catalogStatus, runtime=catalog?.runtime;
+  $('runtime-version').textContent=runtime?'正在运行 v'+runtime.version+' · '+(runtime.revision?.slice(0,12)??'来源 SHA 暂不可用')+(runtime.worktreeDirty===true?' · 运行目录有本地修改':''):'运行服务的版本暂不可用。';
+  $('catalog-status').textContent=catalog?.reachable?'服务目录 '+catalog.toolCount+' 个工具 / '+catalog.eventCount+' 个事件 · '+(catalog.matchesInstalled?'与当前安装一致':'与当前安装有差异')+'。原 dot 已加载的目录需在原插件中核对。':'服务目录暂不可用。';
   $('notice').classList.toggle('hidden',!value.notice);$('notice').textContent=value.notice??'';
   const selected=value.channels.filter(c=>c.selected),ready=selected.filter(c=>c.presentation.state==='ready').length,attention=selected.filter(c=>!['ready','readiness'].includes(c.presentation.state)).length;
   replace($('summary'),[summaryCard('已选渠道',selected.length,'/ 8 个渠道','◈'),summaryCard('链路就绪',ready,'个入口','✓'),summaryCard('需要处理',attention,'项连接进度','↗')]);
@@ -29,6 +41,7 @@ function renderState(value){
   for(const id of ['check-config','save-config'])$(id).disabled=value.demo||!value.configurationAvailable;
   replace($('component-versions'),value.installation.components.map(c=>{const item=node('div','component-item');item.append(node('span',null,c.id==='core'?'共享核心':value.channels.find(x=>x.id===c.id)?.name??c.id),node('strong',null,c.version));return item;}));
   renderReminderChannels(value);
+  renderGroupChannels(value);
   renderSetup();
 }
 function setupStep(number,title,children){const row=node('div','step'),content=node('div');content.append(node('h3',null,title),...children);row.append(node('span','step-number',String(number)),content);return row;}
@@ -119,8 +132,10 @@ function editReminder(reminder){
 }
 async function reminderAction(reminder,action){
   if(action==='cancel'&&!window.confirm('取消这条提醒及其后续发送？已开始的发送会保留原状态。'))return;
+  if(action==='retry'&&!window.confirm('平台上次明确拒绝了这条消息。现在重试同一条消息？'))return;
   await api('/api/reminder-action',{channel:$('reminder-channel').value,outbound_id:reminder.outbound_id,expected_revision:reminder.revision,action,confirm:true});
-  feedback(action==='pause'?'提醒已暂停。':action==='resume'?'提醒已恢复。':'提醒已取消。');
+  const messages={pause:'提醒已暂停。',resume:'提醒已恢复。',cancel:'提醒已取消。',retry:'已确认重试，等待平台返回发送结果。'};
+  feedback(messages[action]);
   await loadReminders();
 }
 async function reminderHistory(reminder){
@@ -158,6 +173,7 @@ async function loadReminders(){
     if(['active','paused'].includes(reminder.status)&&reminderSendEnabled)button('编辑',()=>editReminder(reminder));
     if(['active','pending'].includes(reminder.status))button('暂停',()=>reminderAction(reminder,'pause'));
     if(reminder.status==='paused'&&reminderSendEnabled)button('恢复',()=>reminderAction(reminder,'resume'));
+    if(reminder.status==='rejected'&&reminder.repeat==='once'&&reminderSendEnabled)button('重试已拒绝发送',()=>reminderAction(reminder,'retry'));
     if(['active','pending','paused','uncertain','rejected'].includes(reminder.status))button('取消',()=>reminderAction(reminder,'cancel'));
     button('发送记录',()=>reminderHistory(reminder));
     card.append(actions);return card;
@@ -182,5 +198,108 @@ $('reminder-form').addEventListener('submit',event=>{
     const result=await api('/api/reminder-save',body);
     feedback(result.status==='paused'?'提醒已保存为暂停。':'提醒已保存，计划时间 '+reminderTime(result.send_at,result.timezone)+'。');
     resetReminderForm();await loadReminders();
+  });
+});
+
+function renderGroupChannels(value) {
+  const selector = $('group-channel'), previous = selector.value;
+  const available = value.channels.filter(channel => channel.selected && channel.groupsSupported);
+  replace(selector, available.map(channel => {const option = node('option', null, channel.name);option.value = channel.id;return option;}));
+  if (available.some(channel => channel.id === previous)) selector.value = previous;
+  if (groupEditor && !available.some(channel => channel.id === groupEditor.channel)) {groupEditor = null;replace($('group-list'), []);}
+  $('group-load').disabled = !available.length || value.demo;
+  $('group-add').disabled = !groupEditor || value.demo;
+  $('group-save').disabled = !groupEditor || value.demo;
+  if (!available.length) $('group-notice').textContent = '接入支持群聊的渠道后，可在这里配置指定群、成员和触发方式。';
+}
+
+function groupField(label, element) {
+  const field = node('label', null, label);
+  field.append(element);
+  return field;
+}
+
+function groupSelect(value, options, change) {
+  const selector = node('select');
+  for (const [key, label] of options) {const option = node('option', null, label);option.value = key;selector.append(option);}
+  selector.value = value;
+  selector.addEventListener('change', () => change(selector.value));
+  return selector;
+}
+
+function groupLines(value, change) {
+  const area = node('textarea');
+  area.rows = 3;
+  area.value = (value ?? []).join('\n');
+  area.addEventListener('input', () => change([...new Set(area.value.split(/\r?\n/u).map(item => item.trim()).filter(Boolean))]));
+  return area;
+}
+
+function renderGroupEditor() {
+  if (!groupEditor) return;
+  replace($('group-list'), groupEditor.groups.map((group, index) => {
+    const fieldset = node('fieldset', 'group-rule'), form = node('div', 'reminder-form');
+    const conversation = node('input');
+    conversation.required = true;
+    conversation.maxLength = 256;
+    conversation.value = group.conversation_id ?? '';
+    conversation.addEventListener('input', () => {group.conversation_id = conversation.value.trim();});
+    form.append(groupField(groupEditor.channel === 'discord' ? '服务器频道标识' : '群标识', conversation));
+    form.append(groupField('允许触发的成员', groupSelect(group.members, [['owner','仅本人'],['allowlist','指定成员'],['all','全员']], value => {group.members = value;renderGroupEditor();})));
+    if (group.members === 'allowlist') form.append(groupField('成员标识，每行一个', groupLines(group.allow_from, value => {group.allow_from = value;})));
+    form.append(groupField('自动触发', groupSelect(group.auto_reply, [['off','关闭自动触发'],['keywords','匹配关键词'],['all','所有已投递消息']], value => {group.auto_reply = value;renderGroupEditor();})));
+    if (group.auto_reply === 'keywords') form.append(groupField('关键词，每行一个', groupLines(group.keywords, value => {group.keywords = value;})));
+    form.append(groupField('桥内近期上下文', groupSelect(group.context_scope, [['sender','按发送人分别保留'],['group','群内共享']], value => {group.context_scope = value;})));
+    for (const [key, label] of [['enabled','启用此群规则'],['mention','被 @ 时回复'],['reply_in_thread','沿用原话题或线程']]) {
+      const checkbox = node('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = group[key] !== false;
+      checkbox.addEventListener('change', () => {group[key] = checkbox.checked;});
+      form.append(groupField(label, checkbox));
+    }
+    const remove = node('button', 'button secondary', '移除此条规则');
+    remove.type = 'button';
+    remove.addEventListener('click', () => {groupEditor.groups.splice(index, 1);renderGroupEditor();});
+    fieldset.append(node('legend', null, '群聊'), form, remove);
+    return fieldset;
+  }));
+  $('group-add').disabled = groupEditor.groups.length >= 50;
+  $('group-save').disabled = false;
+}
+
+$('group-load').addEventListener('click', () => void busy($('group-load'), async () => {
+  const channel = $('group-channel').value;
+  const result = await api('/api/group-rules', {channel});
+  if ($('group-channel').value !== channel) return;
+  groupEditor = {...result, groups: structuredClone(result.groups)};
+  $('group-notice').textContent = result.globalMentionsEnabled ? '全局群 @ 规则已启用。指定群规则会与这项配置共同生效。' : '规则作用于平台实际投递给机器人的消息。';
+  $('group-add').disabled = false;
+  renderGroupEditor();
+}));
+$('group-channel').addEventListener('change', () => {
+  groupEditor = null;
+  replace($('group-list'), []);
+  $('group-add').disabled = true;
+  $('group-save').disabled = true;
+  $('group-notice').textContent = '读取当前渠道的规则后开始编辑。';
+});
+$('group-add').addEventListener('click', () => {
+  if (!groupEditor || groupEditor.groups.length >= 50) return;
+  groupEditor.groups.push({conversation_id: '', enabled: true, members: 'owner', allow_from: [],
+    mention: true, auto_reply: 'off', keywords: [], reply_in_thread: true, context_scope: 'sender'});
+  renderGroupEditor();
+});
+$('group-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (!groupEditor || !window.confirm('保存这些群、成员和触发规则，并在下次受控重启时应用？')) return;
+  void busy($('group-save'), async () => {
+    const groups = groupEditor.groups.map(group => ({...group,
+      allow_from: group.members === 'allowlist' ? group.allow_from : [],
+      keywords: group.auto_reply === 'keywords' ? group.keywords : []}));
+    const result = await api('/api/group-save', {channel: groupEditor.channel, groups, revision: groupEditor.revision, confirm: true});
+    feedback('群规则已保存。请受控重启对应服务，再在原 dot 核对原事件任务的群聊范围。');
+    groupEditor.revision = null;
+    $('group-save').disabled = true;
+    if (result.saved) $('group-load').click();
   });
 });

@@ -60,3 +60,10 @@ Open `http://127.0.0.1:5399` on the deployment computer. No public management li
 ## My reminders
 
 Select an existing channel to create, edit, pause, resume or cancel reminders and review the last twenty attempts. Creation can save a paused draft. Lists are paginated and can include finished records. The channel must already allow proactive owner sends. Local times use the entered IANA timezone, reject daylight-saving gaps and select the first occurrence of an overlap. See [scheduled messages](scheduled-messages.en.md).
+
+
+## Group rules and running versions
+
+Runtime settings can read/edit selected-channel group rules. Membership supports owner, allowlist and all; automatic triggers support off, keywords and all messages actually delivered, with mentions configured separately. Saving creates a new protected policy version and updates the environment reference. An administrator reviews it, restarts the relevant service and coordinates the original dot's single configured subscription.
+
+Version management shows the manager's installed version, the authenticated `/runtime` source SHA/version of the running service, and whether its tool/event catalog matches the installation. Refresh the original dot's loaded plugin directory separately. CLI `status` exposes the same sanitized `catalogStatus`.

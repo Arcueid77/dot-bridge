@@ -104,3 +104,12 @@ Media and group capabilities follow channel policy and dot capabilities. Officia
 ## Downgrading reminders and choices
 
 Before returning to core 0.11 or earlier, pause or finish weekday and interval schedules, settle accepted choices and in-progress uploads, then switch to the saved compatible code and service configuration. Preserve the current databases, storage keys and delivery outcomes. Old database snapshots omit messages received since that snapshot.
+
+
+## Local speech and catalog reconciliation
+
+On Linux, install espeak-ng, ffmpeg and util-linux from the distribution's official source. Reuse the protected audio guard and `BRIDGE_LOCK_DIRECTORY`. Set `DOT_BRIDGE_SPEECH_SYNTHESIS=local-espeak` for selected channels and optionally `DOT_BRIDGE_SPEECH_VOICE=zh`. Restart the relevant backend and inspect `check_<channel>_speech`. Native Discord voice additionally uses `DISCORD_NATIVE_VOICE=enabled`.
+
+CLI `status` includes `catalogStatus`, comparing the installation with the full tool/event catalog returned by the running service and its actual source SHA. Check effective ExecStart and immutable component pins before refreshing the original dot's plugin directory. The status explicitly leaves that client-directory check to the plugin.
+
+Before downgrading a database containing combined batches, stop new inputs and settle completable work. Select code compatible with its retained batch/task/reminder state. Keep uncertain outcomes, the original database/key pair and every source-to-anchor link.

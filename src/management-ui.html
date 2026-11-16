@@ -37,6 +37,14 @@
       <div class="page-heading"><div><p class="eyebrow">按需启用</p><h1>运行设置</h1><p>保存下次启动使用的渠道，不中断正在进行的对话。</p></div></div>
       <div class="panel"><h2>启用的渠道</h2><p class="muted">对应的私有环境文件需要已经准备好。保存前会先做离线检查。</p><div id="channel-options" class="settings-grid"></div><div class="settings-actions"><button id="check-config" class="button secondary">检查所选配置</button><button id="save-config" class="button primary">保存下次启动配置</button></div><p class="help">保留现有模式、数据目录和私有文件引用。凭据、回调域名与系统权限在原受保护流程中维护。</p></div>
       <div class="panel subtle"><h3>保存以后</h3><p>界面会保留原清单的私有备份。新选择在管理员核对并重启服务后生效；页面不会另起一套收发进程。</p></div>
+      <div class="panel"><h2>下次启动的群规则</h2>
+        <div class="select-row"><label for="group-channel">选择渠道</label><select id="group-channel"></select><button id="group-load" class="button secondary" type="button">读取规则</button></div>
+        <p id="group-notice" class="help"></p>
+        <form id="group-form"><div id="group-list" class="group-rules-list"></div>
+          <div class="settings-actions"><button id="group-add" class="button secondary" type="button">新增群规则</button><button id="group-save" class="button primary" type="submit">保存群规则</button></div>
+        </form>
+        <p class="help">新规则保存为独立私有版本，受控重启后应用。原 dot 的事件任务还需核对对应群聊范围。</p>
+      </div>
     </section>
     <section id="view-reminders" class="view hidden">
       <div class="page-heading"><div><p class="eyebrow">到点发回本人私聊</p><h1>我的提醒</h1><p>安排固定文字提醒，查看下次执行和发送记录。</p></div><button id="reminder-refresh" class="button secondary">刷新提醒</button></div>
@@ -61,7 +69,7 @@
     </section>
     <section id="view-updates" class="view hidden">
       <div class="page-heading"><div><p class="eyebrow">整套版本一起管理</p><h1>版本与升级</h1><p>先检查本机已有发行版，再交给管理员备份和切换。</p></div></div>
-      <div class="panel"><div class="version-heading"><div><span class="muted">当前安装</span><h2 id="current-version">—</h2></div><span class="badge quiet">固定组件版本</span></div><div id="component-versions" class="component-versions"></div></div>
+      <div class="panel"><div class="version-heading"><div><span class="muted">当前安装</span><h2 id="current-version">—</h2></div><span class="badge quiet">固定组件版本</span></div><p id="runtime-version" class="help"></p><p id="catalog-status" class="help"></p><div id="component-versions" class="component-versions"></div></div>
       <div class="panel"><h2>准备升级</h2><p class="muted">只检查启动时指定的本地发行目录，不下载或执行远程代码。</p><div class="select-row"><select id="release-choice" aria-label="目标发行版本"></select><button id="check-release" class="button secondary">检查此版本</button></div><p id="release-empty" class="help"></p><div id="release-result"></div><button id="download-plan" class="button primary hidden">下载升级操作单</button></div>
     </section>
     <footer>DotBridge · 继续使用你熟悉的聊天软件和原来的 dot</footer>

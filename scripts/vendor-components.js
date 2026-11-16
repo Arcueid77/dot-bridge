@@ -29,6 +29,7 @@ try{
   const archive=path.join(scratch,`${name}.tar`);
   run('git',['archive','--format=tar','--output',archive,revision],source);
   run(tar,['-xf',archive,'-C',destination],scratch);
+  if(fs.readFileSync(path.join(destination,'source-revision.txt'),'utf8').trim()!==revision)throw Error('Exported component provenance differs.');
   const metadata=JSON.parse(fs.readFileSync(path.join(destination,'package.json'),'utf8'));
   if(metadata.name!==(id==='core'?'@dot-bridge/core':name))throw Error('Component package name differs.');
   if(id!=='core'){
