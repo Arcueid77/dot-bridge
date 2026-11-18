@@ -45,6 +45,25 @@ function renderState(value){
   renderSetup();
 }
 function setupStep(number,title,children){const row=node('div','step'),content=node('div');content.append(node('h3',null,title),...children);row.append(node('span','step-number',String(number)),content);return row;}
+function renderDeliveryActivity(activity){
+  if(!activity)return [];
+  const callbackLabels={pending:'待通知 dot',processing:'正在通知 dot',delivered:'dot 回调已确认接收',
+    uncertain:'dot 回调结果不明',cancelled:'dot 回调已取消',expired:'dot 回调已过期',dead:'dot 回调失败'};
+  const receiptLabels={none:'等待提交回复',pending:'等待发送',processing:'正在发送',sent:'平台已确认接收',
+    uncertain:'发送结果不明',cancelled:'回复已取消',expired:'回复已过期',dead:'回复发送失败'};
+  const latest=activity.latest;
+  const items=[node('p','muted',latest?
+    '最近入站 '+new Date(latest.receivedAt).toLocaleString('zh-CN')+' · '+callbackLabels[latest.callbackState]:
+    '尚无入站消息记录')];
+  if(latest)items.push(node('p','muted',(latest.replySubmitted?'已提交回复':'尚无提交记录')+' · '+receiptLabels[latest.replyState]));
+  const {callbacks,heldReplies,retainedUncertain}=activity;
+  if(callbacks.pending||callbacks.processing||callbacks.uncertain)items.push(node('p','help',
+    '通知 dot · 等待 '+callbacks.pending+' · 发送中 '+callbacks.processing+' · 结果不明 '+callbacks.uncertain));
+  if(heldReplies)items.push(node('p','help','待恢复的超限旧附件 '+heldReplies+' 条'));
+  if(retainedUncertain.callbacks||retainedUncertain.replies)items.push(node('p','help',
+    '正文清理后保留的结果不明记录 · 回调 '+retainedUncertain.callbacks+' · 回复 '+retainedUncertain.replies));
+  return items;
+}
 function renderSetup(){
   if(!snapshot)return;const channel=snapshot.channels.find(c=>c.id===$('setup-channel').value)??snapshot.channels[0],guide=channel.guide,panel=node('div','panel');
   const platform=[node('p',null,'所需私密信息：'+guide.credentials.join('、')+'。只保存在受保护的文件中。')];if(guide.console){const link=node('a',null,'打开官方管理入口 ↗');link.href=guide.console;link.target='_blank';link.rel='noreferrer noopener';platform.push(link);}const list=node('ul');for(const text of guide.steps)list.append(node('li',null,text));platform.push(list);
@@ -58,6 +77,7 @@ function renderSetup(){
   if(channel.subscriptionDiagnostics?.length){const descriptions={validate:'订阅请求格式未通过检查',policy:'回调域名需要核对批准',transport:'暂时无法连接 dot 的通知入口',challenge:'dot 的回调验证未完成',persist:'订阅尚未保存',complete:'订阅已保存'};const latest=channel.subscriptionDiagnostics.at(-1);subscribe.push(node('p',null,'最近一次记录：'+descriptions[latest.stage]+'。'));const advanced=node('details');advanced.append(node('summary',null,'查看脱敏诊断'));for(const item of channel.subscriptionDiagnostics){const row=node('div','diagnostic');for(const text of [item.stage,item.code??'—',item.reason,item.hostname??'无域名'])row.append(node('span',null,String(text)));advanced.append(row);}subscribe.push(advanced);}else subscribe.push(node('p',null,'暂无可用的订阅请求记录，无法据此还原之前失败。'));
   if(channel.connectionStatus?.callbackSettingName){const policy=node('details');policy.append(node('summary',null,'查看通知域名配置'));policy.append(node('p',null,'本渠道读取的配置项：'+channel.connectionStatus.callbackSettingName));if(channel.connectionStatus.callbackHostCount!==null)policy.append(node('p',null,'已设置精确域名数量：'+channel.connectionStatus.callbackHostCount));if(channel.connectionStatus.wrongCallbackSettingPresent===true)policy.append(node('p',null,'检测到另一种配置名；该名称对本渠道不生效，请管理员核对。页面不会替你更改或批准域名。'));subscribe.push(policy);}
   const check=[node('span','badge '+channel.presentation.tone,channel.presentation.label),node('p',null,channel.presentation.detail),node('p',null,'订阅就绪后，从本人私聊发送两条不同消息，确认各回复一次。平台连接、服务存活和真实收发分别核对。')];
+  check.push(...renderDeliveryActivity(channel.deliveryActivity));
   if(channel.replyCapabilities?.longReplyMode==='file')check.push(node('p',null,'较长的回答会作为文本文件发回，保留完整内容。'));
   if(channel.replyCapabilities?.longReplyMode==='chunks')check.push(node('p',null,'较长的回答会在同一次回复中分段显示。'));
   const reminders=node('details');reminders.append(node('summary',null,'让 dot 定时给我发消息'),node('p',null,'主动发送需管理员按渠道单独开启。固定文字提醒保存在服务器；动态内容由原 dot 保存定时任务。每个渠道的可用情况可在“我的提醒”中查看。'),node('pre',null,guide.outboundPrompt));
@@ -173,7 +193,7 @@ async function loadReminders(){
     if(['active','paused'].includes(reminder.status)&&reminderSendEnabled)button('编辑',()=>editReminder(reminder));
     if(['active','pending'].includes(reminder.status))button('暂停',()=>reminderAction(reminder,'pause'));
     if(reminder.status==='paused'&&reminderSendEnabled)button('恢复',()=>reminderAction(reminder,'resume'));
-    if(reminder.status==='rejected'&&reminder.repeat==='once'&&reminderSendEnabled)button('重试已拒绝发送',()=>reminderAction(reminder,'retry'));
+    if(reminder.status==='rejected'&&reminder.repeat==='once'&&reminder.text.trim()&&reminderSendEnabled)button('重试已拒绝发送',()=>reminderAction(reminder,'retry'));
     if(['active','pending','paused','uncertain','rejected'].includes(reminder.status))button('取消',()=>reminderAction(reminder,'cancel'));
     button('发送记录',()=>reminderHistory(reminder));
     card.append(actions);return card;

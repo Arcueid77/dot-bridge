@@ -1,5 +1,6 @@
 import {components} from './components.js';
 import {inspectMcp,inspectReadiness} from './rpc.js';
+import {projectRuntimeStatus} from '@dot-bridge/core/channels/status.js';
 
 const stages=new Set(['validate','policy','transport','challenge','persist','complete']);
 const reasons=new Set(['invalid_request','callback_policy_required','transport_unavailable','challenge_failed','timeout','subscription_conflict','subscription_cancelled','storage_unavailable','subscribed']);
@@ -23,6 +24,15 @@ function safeConnection(value){
  return {stage,reason,nextStep,callbackHostCount:count(value.callback_hosts_count)?value.callback_hosts_count:null,diagnosticHistory:pick(value.diagnostic_history,['available','unavailable']),callbackHostsConfigured:boolean(value.callback_hosts_configured),legacyCallbackAliasPresent:boolean(value.legacy_callback_alias_present),callbackSettingName:pick(value.callback_setting_name,['CALLBACK_HOSTS','MCP_CALLBACK_ALLOWED_HOSTS']),wrongCallbackSettingPresent:boolean(value.wrong_callback_setting_present)};
 }
 function safeWork(value){return value&&['pending','processing','uncertain'].every(key=>count(value[key]))?{pending:value.pending,processing:value.processing,uncertain:value.uncertain}:null;}
+function safeDelivery(value){
+ if(!value)return null;
+ try{
+  const activity=projectRuntimeStatus({delivery_activity:value}).delivery_activity, latest=activity.latest;
+  return {callbacks:activity.callbacks,heldReplies:activity.held_replies,retainedUncertain:activity.retained_uncertain,
+    latest:latest?{receivedAt:latest.received_at,callbackState:latest.callback_state,
+      replySubmitted:latest.reply_submitted,replyState:latest.reply_state}:null};
+ }catch{return null;}
+}
 function safeReplyCapabilities(value){return value&&count(value.max_text_chars)&&count(value.native_text_chars)&&['file','chunks','none'].includes(value.long_reply_mode)?{maxTextChars:value.max_text_chars,nativeTextChars:value.native_text_chars,longReplyMode:value.long_reply_mode}:null;}
 function safeExperience(value){
  if(!value||!['feedback_enabled','typing','reactions','progressive_replies','recent_context','management_commands'].every(key=>typeof value[key]==='boolean')||!count(value.configured_groups)||value.configured_groups>50||value.hosted_dot_controls!==false)return null;
@@ -40,6 +50,7 @@ export function safeChannelStatus(id,config,value) {
     callbackHostCount:connectionStatus?.callbackHostCount??config.callbackHosts?.length??0,pendingMessageCount:Array.isArray(value?.pending_messages)?value.pending_messages.length:null,
     subscriptionDiagnostics,diagnosticHistoryAvailable:Array.isArray(value?.subscription_diagnostics),
     subscriptionStatus:safeSubscription(value?.subscription_status),connectionStatus,replyWork:safeWork(value?.reply_work),
+    deliveryActivity:safeDelivery(value?.delivery_activity),
     mediaReadiness:typeof value?.media_readiness?.reply_publisher_configured==='boolean'?{replyPublisherConfigured:value.media_readiness.reply_publisher_configured,replyPublisherRequired:boolean(value.media_readiness.reply_publisher_required)}:null,
     replyCapabilities:safeReplyCapabilities(value?.reply_capabilities),experienceCapabilities:safeExperience(value?.experience_capabilities),ownerManagementConnection:config.ownerManagementConnection===true};
 }

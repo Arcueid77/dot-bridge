@@ -28,4 +28,6 @@ for(const folder of ['bin','src','scripts','test'])for(const file of fs.readdirS
  if(result.status!==0){process.stderr.write(result.stderr);process.exit(1);}count++;
 }
 for(const file of ['README.md','README.en.md','docs/development.md','docs/im-roadmap.md'])if(!fs.existsSync(path.join(root,file)))throw Error('Required documentation is missing.');
+const releaseNotes=spawnSync(process.execPath,[path.join(root,'scripts/release-notes.js'),'--check'],{encoding:'utf8',windowsHide:true});
+if(releaseNotes.status!==0)throw Error('Invalid versioned release acceptance data. '+(releaseNotes.stderr??''));
 console.log(`Checked ${count} JavaScript files, pinned artifacts, installed versions and required documentation.`);

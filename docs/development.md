@@ -150,3 +150,10 @@ VPS 以最终运行用户执行的合成迁移检查 16 项全部通过，覆盖
 Core 0.14.1 (`49fcf700a08be92706155df35e3cec1acdce6b5a`) binds a retry after failed local speech conversion to the task's already retained complete answer. The regression reproduces the former text mismatch, rejects a different replacement before conversion and allows the original answer to retry. Local core validation passed 318 tests with five platform skips. Component artifacts are rebuilt from immutable committed source.
 
 core 0.14.1 将本地语音转换失败后的重试绑定到已保存的完整结果。新增回归先复现原问题，再验证不同文字会在转换前拒绝、原文字可继续重试。本地核心检查 318 项通过、5 项平台跳过；各组件按固定提交重新生成依赖包。
+
+
+## Versioned release verification / 版本验收
+
+Update [acceptance.json](acceptance.json) when a build gains fixture, readiness or real-account evidence. Generate bilingual GitHub release notes with `npm run --silent release:notes -- --version 0.10.2`. The installation check validates all version, channel and feature entries.
+
+按版本、渠道和功能登记在同一份验收表。历史账号结果保留在对应版本中。新版本的源码测试、语音准备检查和实际收发分别更新。

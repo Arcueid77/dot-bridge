@@ -1,0 +1,150 @@
+{
+  "features": [
+    "private_text",
+    "speech",
+    "media_reply",
+    "restart"
+  ],
+  "versions": {
+    "0.10.1": {
+      "observations": {
+        "zh": [
+          "飞书、Telegram、Discord 的本人网页私聊各显示一次完整文字回复。QQ、微信沿用更早版本的真实往返记录，本轮网页收发仍待验证。",
+          "五个已接入渠道的语音准备检查通过。实际语音、媒体回复和本版本重启后收发等待逐项验证。"
+        ],
+        "en": [
+          "One complete private text reply was observed in each of Lark, Telegram and Discord web chats. QQ and Weixin have earlier real-account round trips, with this version's web checks pending.",
+          "Speech readiness passed in the five configured channels. Real speech, media delivery and post-restart replies for this version remain pending."
+        ]
+      },
+      "channels": {
+        "lark": [
+          "live",
+          "ready",
+          "fixture",
+          "pending"
+        ],
+        "qq": [
+          "historical",
+          "ready",
+          "fixture",
+          "pending"
+        ],
+        "weixin": [
+          "historical",
+          "ready",
+          "fixture",
+          "pending"
+        ],
+        "telegram": [
+          "live",
+          "ready",
+          "fixture",
+          "pending"
+        ],
+        "discord": [
+          "live",
+          "ready",
+          "fixture",
+          "pending"
+        ],
+        "dingtalk": [
+          "fixture",
+          "pending",
+          "fixture",
+          "pending"
+        ],
+        "wecom": [
+          "fixture",
+          "pending",
+          "fixture",
+          "pending"
+        ],
+        "line": [
+          "fixture",
+          "issue",
+          "fixture",
+          "pending"
+        ]
+      }
+    },
+    "0.10.2": {
+      "changes": {
+        "zh": [
+          "订阅切换按发起请求时的版本核对，QQ 和飞书保留在途发送的真实回执。",
+          "串行队列等待前一条的回调重试，超限旧附件单独挂起，历史记录较多时仍会更新新消息的处理提示。",
+          "状态页显示最近入站、dot 回调、回复提交和平台回执。一次目录核对复用经过鉴权的运行时目录。",
+          "提醒正文到期后禁用重试，未核对的发送结果和去重标识可在正文清理后保留。",
+          "LINE 本地语音生成最长 60 秒的 M4A。私有迁移工具检查所选 LINE 媒体配置及其引用的密钥。"
+        ],
+        "en": [
+          "Late callback responses are scoped to the subscription revision that initiated them. QQ and Lark retain the outcome of in-flight provider sends.",
+          "Serial queues wait for earlier callback retries. Oversized retained attachments are held separately, and recent processing feedback remains available with a large history.",
+          "The status page shows recent input, dot callback, reply submission and provider acknowledgement. Catalog inspection reuses the authenticated runtime snapshot.",
+          "Expired reminder text is unavailable for retry. Unresolved delivery outcomes and deduplication markers survive content cleanup.",
+          "LINE speech produces M4A up to 60 seconds. The private migration tool includes the selected LINE media configuration and its referenced keys."
+        ]
+      },
+      "observations": {
+        "zh": [
+          "本版本的验收采用合成输入和网络夹具。LINE 的 M4A 回归使用实际 FFmpeg 编码，并通过本地媒体发布器检查。",
+          "真实账号往返和生产切换等待按本版本验收。0.10.1 的网页私聊证据保留在对应版本记录。"
+        ],
+        "en": [
+          "This version is checked with synthetic input and network fixtures. The LINE M4A regression uses real FFmpeg encoding and the local media publisher.",
+          "Real-account round trips and production activation await verification for this build. The 0.10.1 web-chat results are recorded under that version."
+        ]
+      },
+      "channels": {
+        "lark": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ],
+        "qq": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ],
+        "weixin": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ],
+        "telegram": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ],
+        "discord": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ],
+        "dingtalk": [
+          "fixture",
+          "pending",
+          "fixture",
+          "fixture"
+        ],
+        "wecom": [
+          "fixture",
+          "pending",
+          "fixture",
+          "fixture"
+        ],
+        "line": [
+          "fixture",
+          "fixture",
+          "fixture",
+          "fixture"
+        ]
+      }
+    }
+  }
+}

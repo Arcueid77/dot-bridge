@@ -63,7 +63,9 @@ export async function reminderRequest(
     ) {
       const code = response.body?.error?.code;
       const message =
-        code === -32013
+        response.body?.error?.data?.reason === 'content_expired'
+          ? '提醒正文已按保留期限清理。'
+          : code === -32013
           ? '提醒已被其他操作修改，或正在发送，请刷新后核对。'
           : code === -32016
             ? '此渠道尚未开启本人主动发送，请由管理员核对。'

@@ -67,3 +67,8 @@ Select an existing channel to create, edit, pause, resume or cancel reminders an
 Runtime settings can read/edit selected-channel group rules. Membership supports owner, allowlist and all; automatic triggers support off, keywords and all messages actually delivered, with mentions configured separately. Saving creates a new protected policy version and updates the environment reference. An administrator reviews it, restarts the relevant service and coordinates the original dot's single configured subscription.
 
 Version management shows the manager's installed version, the authenticated `/runtime` source SHA/version of the running service, and whether its tool/event catalog matches the installation. Refresh the original dot's loaded plugin directory separately. CLI `status` exposes the same sanitized `catalogStatus`.
+
+
+## Message delivery progress
+
+Open a connection to see the latest inbound timestamp, dot callback outcome, reply submission and provider acknowledgement. Unresolved callbacks and replies have separate counts. Oversized retained attachments appear as held for recovery while the channel processes other messages. Retention clears expired content and keeps deduplication markers and outcome states for unresolved sends. An expired one-time reminder loses its retry action when its text is cleared.

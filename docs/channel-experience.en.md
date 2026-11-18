@@ -41,7 +41,7 @@ Operators can add `queue` to the protected interaction policy, for example `{"mo
 
 ## Voice answers
 
-After an administrator enables local eSpeak NG, ask for a short spoken answer. The original dot checks the channel's speech tools and supplies the genuine complete answer, up to 2000 characters and 120 seconds. The text is also retained in its task. QQ/Weixin use native voice, Lark/Telegram use Opus, Discord can use a native voice message with a real waveform, LINE uses MP3, and DingTalk/WeCom return a WAV file. The application's media permissions and protected settings apply.
+After an administrator enables local eSpeak NG, ask for a short spoken answer. The original dot checks the channel's speech tools and supplies the genuine complete answer, up to 2000 characters and 120 seconds. The text is also retained in its task. QQ/Weixin use native voice, Lark/Telegram use Opus, Discord can use a native voice message with a real waveform, LINE uses M4A up to 60 seconds, and DingTalk/WeCom return a WAV file. The application's media permissions and protected settings apply.
 
 ## Explicit rejection retry
 

@@ -65,3 +65,23 @@ test('interaction status exposes only bounded declared capabilities and no ident
  const value=safeChannelStatus('telegram',{},{experience_capabilities:capabilities});assert.equal(value.experienceCapabilities.configuredGroups,2);assert.equal(value.experienceCapabilities.hostedDotControls,false);assert.equal(JSON.stringify(value).includes('private'),false);
  assert.equal(safeChannelStatus('telegram',{},{experience_capabilities:{...capabilities,configured_groups:51}}).experienceCapabilities,null);assert.equal(safeChannelStatus('telegram',{},{experience_capabilities:{...capabilities,hosted_dot_controls:true}}).experienceCapabilities,null);
 });
+test('management status shows callback uncertainty independently from reply submission',()=>{
+ const delivery_activity={
+  callbacks:{pending:0,processing:0,uncertain:1},
+  held_replies:2,
+  retained_uncertain:{callbacks:1,replies:3},
+  latest:{received_at:'2026-11-18T00:00:00.000Z',callback_state:'uncertain',reply_state:'none',reply_submitted:false},
+ };
+ const status=safeChannelStatus('line',{},{
+  reply_work:{pending:0,processing:0,uncertain:0},delivery_activity,
+ });
+ assert.equal(status.deliveryActivity.latest.callbackState,'uncertain');
+ assert.equal(status.deliveryActivity.latest.replySubmitted,false);
+ assert.equal(status.deliveryActivity.callbacks.uncertain,1);
+ assert.equal(status.deliveryActivity.heldReplies,2);
+ assert.equal(status.replyWork.uncertain,0);
+ const invalid=safeChannelStatus('line',{},{delivery_activity:{...delivery_activity,
+  latest:{...delivery_activity.latest,source:'private-fixture-id'}}});
+ assert.equal(invalid.deliveryActivity,null);
+ assert.equal(JSON.stringify(invalid).includes('private-fixture-id'),false);
+});
